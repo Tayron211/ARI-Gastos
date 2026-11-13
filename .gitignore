@@ -10,4 +10,7 @@ build/
 npm-debug.log*
 .DS_Store
 Thumbs.db
+android_app/build/
+android_app/assets/
+*.idsig
 

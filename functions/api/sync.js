@@ -14,8 +14,9 @@ export async function onRequestGet(context) {
   try {
     const expensesStmt = db.prepare("SELECT * FROM expenses ORDER BY date DESC");
     const loansStmt = db.prepare("SELECT * FROM loans ORDER BY startDate DESC");
+    const deletedStmt = db.prepare("SELECT id, type FROM deleted_records");
 
-    const [expensesRes, loansRes] = await db.batch([expensesStmt, loansStmt]);
+    const [expensesRes, loansRes, deletedRes] = await db.batch([expensesStmt, loansStmt, deletedStmt]);
 
     // Parse expenses with fallback for title/concept
     const expenses = (expensesRes.results || []).map(e => ({
@@ -40,11 +41,17 @@ export async function onRequestGet(context) {
       };
     });
 
+    const deletedRows = deletedRes.results || [];
+    const deletedExpenseIds = deletedRows.filter(r => r.type === 'expense').map(r => r.id);
+    const deletedLoanIds = deletedRows.filter(r => r.type === 'loan').map(r => r.id);
+
     return new Response(JSON.stringify({
       success: true,
       timestamp: Date.now(),
       expenses: expenses,
-      loans: loans
+      loans: loans,
+      deletedExpenseIds,
+      deletedLoanIds
     }), {
       status: 200,
       headers: {
@@ -72,13 +79,28 @@ export async function onRequestPost(context) {
 
   try {
     const body = await context.request.json();
-    const { expenses = [], loans = [] } = body;
+    const { expenses = [], loans = [], deletedExpenses = [], deletedLoans = [] } = body;
     const statements = [];
+
+    // Process deleted expenses
+    for (const delId of deletedExpenses) {
+      if (!delId) continue;
+      statements.push(db.prepare("DELETE FROM expenses WHERE id = ?").bind(delId));
+      statements.push(db.prepare("INSERT OR REPLACE INTO deleted_records (id, type, deletedAt) VALUES (?, 'expense', ?)").bind(delId, Date.now()));
+    }
+
+    // Process deleted loans
+    for (const delId of deletedLoans) {
+      if (!delId) continue;
+      statements.push(db.prepare("DELETE FROM loans WHERE id = ?").bind(delId));
+      statements.push(db.prepare("INSERT OR REPLACE INTO deleted_records (id, type, deletedAt) VALUES (?, 'loan', ?)").bind(delId, Date.now()));
+    }
 
     // Batch upsert expenses
     for (const exp of expenses) {
       const concept = exp.title || exp.concept;
       if (!exp.id || !concept) continue;
+      statements.push(db.prepare("DELETE FROM deleted_records WHERE id = ?").bind(exp.id));
       statements.push(
         db.prepare(`
           INSERT INTO expenses (id, concept, amount, currency, category, paymentMethod, date, notes, timestamp, updatedAt)
@@ -111,6 +133,7 @@ export async function onRequestPost(context) {
     for (const l of loans) {
       const entity = l.clientName || l.entity;
       if (!l.id || !entity) continue;
+      statements.push(db.prepare("DELETE FROM deleted_records WHERE id = ?").bind(l.id));
       const historyStr = JSON.stringify(l.history || []);
       statements.push(
         db.prepare(`

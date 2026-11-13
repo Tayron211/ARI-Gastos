@@ -1528,24 +1528,25 @@
           <div style="display: flex; gap: 12px; align-items: center; padding: 10px 12px; background: var(--bg-primary); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
             <div style="width: 26px; height: 26px; border-radius: 50%; background: var(--accent-aqua); color: #042f2e; font-weight: 800; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">1</div>
             <div style="font-size: 0.82rem; color: var(--text-primary);">
-              Presiona el botón verde <strong>"Instalar App Nativa"</strong> abajo.
+              Descarga el archivo <strong>APK nativo</strong> e instálalo directamente en tu teléfono Android.
             </div>
           </div>
           <div style="display: flex; gap: 12px; align-items: center; padding: 10px 12px; background: var(--bg-primary); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
             <div style="width: 26px; height: 26px; border-radius: 50%; background: var(--accent-aqua); color: #042f2e; font-weight: 800; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">2</div>
             <div style="font-size: 0.82rem; color: var(--text-primary);">
-              O toca los <strong>3 puntos (⋮)</strong> de Chrome y selecciona <strong>"Instalar aplicación"</strong> o <strong>"Agregar a la pantalla principal"</strong>.
+              La app se ejecuta como aplicación nativa independiente (sin navegador ni barras) y sincroniza 100% en tiempo real.
             </div>
           </div>
         </div>
 
-        <button type="button" class="btn btn-aqua-glow" id="btn-modal-install-now" style="width: 100%; padding: 12px; justify-content: center; font-size: 0.95rem;" onclick="PWAController.triggerInstall()">
+        <a href="./ARI-Control.apk" download="ARI-Control.apk" class="btn btn-aqua-glow" id="btn-modal-download-apk" style="width: 100%; padding: 14px 12px; justify-content: center; font-size: 0.95rem; text-decoration: none; display: flex; align-items: center; gap: 8px;">
           <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.3" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-          <span>Instalar App Nativa en Android</span>
+          <span>Descargar APK Nativo Android (.apk)</span>
+        </a>
+
+        <button type="button" class="btn btn-secondary" id="btn-modal-install-now" style="width: 100%; margin-top: 10px; padding: 10px; justify-content: center; font-size: 0.82rem;" onclick="PWAController.triggerInstall()">
+          <span>O instalar como PWA desde el navegador</span>
         </button>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-close-modal="modal-apk-install">Cerrar</button>
       </div>
     </div>
   </div>

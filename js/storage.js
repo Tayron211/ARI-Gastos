@@ -543,6 +543,13 @@ const Storage = {
   /* ==========================================================================
      CLOUDFLARE D1 24/7 GLOBAL PERSISTENCE SYNCHRONIZER
      ========================================================================== */
+  getSyncApiUrl() {
+    if (typeof window !== 'undefined' && window.location && window.location.origin && window.location.origin.includes('pages.dev')) {
+      return '/api/sync';
+    }
+    return 'https://ari-gastos.pages.dev/api/sync';
+  },
+
   _cloudSyncTimer: null,
   triggerCloudSync() {
     if (typeof window === 'undefined') return;
@@ -563,10 +570,13 @@ const Storage = {
         ...l,
         entity: l.clientName || l.entity
       }));
-      const res = await fetch('/api/sync', {
+      const deletedExpenses = Array.from(this.getDeletedExpenseIds());
+      const deletedLoans = Array.from(this.getDeletedLoanIds());
+      const apiUrl = this.getSyncApiUrl();
+      const res = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ expenses, loans })
+        body: JSON.stringify({ expenses, loans, deletedExpenses, deletedLoans })
       });
       if (res.ok) {
         console.log('[Storage] Cloudflare D1 sincronizado exitosamente.');
@@ -579,27 +589,57 @@ const Storage = {
   async syncWithCloud() {
     if (typeof navigator !== 'undefined' && !navigator.onLine) return;
     try {
-      const res = await fetch('/api/sync');
+      const apiUrl = this.getSyncApiUrl();
+      const res = await fetch(apiUrl, { cache: 'no-store' });
       if (!res.ok) return;
       const data = await res.json();
       if (!data || !data.success) return;
 
       const cloudExpenses = Array.isArray(data.expenses) ? data.expenses : [];
       const cloudLoans = Array.isArray(data.loans) ? data.loans : [];
+      const deletedExpenseIds = Array.isArray(data.deletedExpenseIds) ? data.deletedExpenseIds : [];
+      const deletedLoanIds = Array.isArray(data.deletedLoanIds) ? data.deletedLoanIds : [];
 
-      if (cloudExpenses.length === 0 && cloudLoans.length === 0) {
+      if (cloudExpenses.length === 0 && cloudLoans.length === 0 && deletedExpenseIds.length === 0 && deletedLoanIds.length === 0) {
         // Cloud is empty, push local data to seed Cloudflare D1
         this.pushToCloud();
         return;
       }
 
-      // Merge cloud expenses non-destructively
+      // 1. Process Remote Deletions
       const localExpenses = this.getExpenses();
       const localExpMap = new Map(localExpenses.map(e => [e.id, e]));
       let expensesChanged = false;
+
+      deletedExpenseIds.forEach(delId => {
+        if (localExpMap.has(delId)) {
+          localExpMap.delete(delId);
+          this.markExpenseDeleted(delId);
+          expensesChanged = true;
+        } else {
+          this.markExpenseDeleted(delId);
+        }
+      });
+
+      const localLoans = this.getLoans();
+      const localLoanMap = new Map(localLoans.map(l => [l.id, l]));
+      let loansChanged = false;
+
+      deletedLoanIds.forEach(delId => {
+        if (localLoanMap.has(delId)) {
+          localLoanMap.delete(delId);
+          this.markLoanDeleted(delId);
+          loansChanged = true;
+        } else {
+          this.markLoanDeleted(delId);
+        }
+      });
+
+      // 2. Merge cloud expenses non-destructively
+      const currentDeletedExp = this.getDeletedExpenseIds();
       cloudExpenses.forEach(ce => {
         const id = ce.id;
-        if (!this.getDeletedExpenseIds().has(id)) {
+        if (!currentDeletedExp.has(id)) {
           const sanitized = this.sanitizeExpense({
             ...ce,
             title: ce.title || ce.concept
@@ -620,13 +660,11 @@ const Storage = {
         }
       }
 
-      // Merge cloud loans non-destructively
-      const localLoans = this.getLoans();
-      const localLoanMap = new Map(localLoans.map(l => [l.id, l]));
-      let loansChanged = false;
+      // 3. Merge cloud loans non-destructively
+      const currentDeletedLoans = this.getDeletedLoanIds();
       cloudLoans.forEach(cl => {
         const id = cl.id;
-        if (!this.getDeletedLoanIds().has(id)) {
+        if (!currentDeletedLoans.has(id)) {
           const sanitized = this.sanitizeLoan({
             ...cl,
             clientName: cl.clientName || cl.entity,

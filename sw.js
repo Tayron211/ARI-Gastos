@@ -3,7 +3,7 @@
  * Progressive Web App Offline & Asset Caching Engine
  */
 
-const CACHE_NAME = 'ari-control-v2.4.1';
+const CACHE_NAME = 'ari-control-v2.4.2';
 
 const PRECACHE_ASSETS = [
   './',
@@ -77,8 +77,18 @@ self.addEventListener('fetch', (event) => {
   // Ignore browser extensions or devtools schemes
   if (!url.protocol.startsWith('http')) return;
 
-  // Strategy A: Live exchange rate APIs or dynamic endpoints -> Network first, fallback to cache
-  if (url.hostname.includes('er-api') || url.hostname.includes('exchangerate') || url.hostname.includes('currency-api') || url.pathname.includes('/api/')) {
+  // Strategy A0: Cloudflare D1 Sync API -> Pure Network Only (never cache stale responses)
+  if (url.pathname.includes('/api/sync')) {
+    event.respondWith(
+      fetch(request).catch(() => new Response(JSON.stringify({ success: false, offline: true }), {
+        headers: { 'Content-Type': 'application/json' }
+      }))
+    );
+    return;
+  }
+
+  // Strategy A: Live exchange rate APIs -> Network first, fallback to cache
+  if (url.hostname.includes('er-api') || url.hostname.includes('exchangerate') || url.hostname.includes('currency-api')) {
     event.respondWith(
       fetch(request)
         .then((networkResponse) => {
