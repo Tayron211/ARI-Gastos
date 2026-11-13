@@ -118,8 +118,7 @@ const ReportsModule = {
         labels: [
           'Gastos Totales',
           ['Capital en Calle', '(Por Cobrar)'],
-          ['Cuotas Cobradas', '(Capital + Int.)'],
-          ['Solo Intereses', '(Ruleteo)']
+          'Solo Intereses'
         ],
         datasets: [
           {
@@ -127,19 +126,16 @@ const ReportsModule = {
             data: [
               activeExp,
               activeLoanRem,
-              activeLoanPaid,
               activeInterestOnly
             ],
             backgroundColor: [
               'rgba(244, 63, 94, 0.82)',
               'rgba(45, 212, 191, 0.85)',
-              'rgba(16, 185, 129, 0.85)',
               'rgba(245, 158, 11, 0.85)'
             ],
             borderColor: [
               '#f43f5e',
               '#2dd4bf',
-              '#10b981',
               '#f59e0b'
             ],
             borderWidth: 1.5,
