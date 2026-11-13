@@ -186,7 +186,7 @@
           <!-- Live Real-Time Currency Ticker -->
           <div class="live-ticker-pill" id="live-ticker-pill" title="Cotizaciones en vivo. Clic para abrir conversor.">
             <span class="live-pulse-dot"></span>
-            <span id="ticker-rates-text">En vivo: USD S/ ... &bull; EUR S/ ...</span>
+            <span id="ticker-rates-text"><span style="display:inline-flex; align-items:center; background:#ffffff; padding:2px 6px; border-radius:4px; vertical-align:middle; margin-right:6px; box-shadow:0 1px 2px rgba(0,0,0,0.12);"><img src="./icons/bcp-logo.svg" alt="BCP" style="height:12px; width:auto; display:block;" /></span><strong>$ Dólar:</strong> C S/ 3.525 V S/ 3.540 &bull; <strong>€ Euro:</strong> C S/ 3.820 V S/ 3.960 &bull; <strong>1 EUR =</strong> $1.087</span>
           </div>
 
           <!-- Push Notifications Bell -->
@@ -790,23 +790,80 @@
             </div>
 
             <!-- BCP Official Exchange Rate Live Capsule -->
-            <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: rgba(13, 148, 136, 0.08); border: 1px solid rgba(45, 212, 191, 0.25); border-radius: var(--radius-md); margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
-              <div style="display: flex; align-items: center; gap: 10px;">
-                <div style="background: #002a8f; color: #ff7800; font-weight: 900; font-size: 0.8rem; padding: 4px 10px; border-radius: 6px; letter-spacing: 0.8px; border: 1px solid rgba(255,120,0,0.3);">BCP</div>
-                <div>
-                  <div style="font-weight: 800; font-size: 0.92rem; color: var(--text-primary);">Banco de Crédito del Perú (BCP)</div>
-                  <div style="font-size: 0.74rem; color: var(--text-secondary);">Fuente oficial directa en tiempo real</div>
+            <div class="bcp-live-capsule" style="background: var(--bg-card); border: 1px solid rgba(45, 212, 191, 0.28); border-radius: var(--radius-lg); padding: 14px 18px; margin-bottom: 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.04);">
+              <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 12px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div style="background: #ffffff; padding: 6px 12px; border-radius: 8px; display: inline-flex; align-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.08); flex-shrink: 0;">
+                    <img src="./icons/bcp-logo.svg" alt="Banco de Crédito BCP" style="height: 24px; width: auto; display: block;" />
+                  </div>
+                  <div>
+                    <div style="font-weight: 800; font-size: 0.95rem; color: var(--text-primary); display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                      <span>Banco de Crédito del Perú</span>
+                      <span style="font-size: 0.68rem; font-weight: 800; color: #10b981; background: rgba(16, 185, 129, 0.12); padding: 2px 8px; border-radius: 20px; border: 1px solid rgba(16, 185, 129, 0.25);">OFICIAL EN VIVO</span>
+                    </div>
+                    <div style="font-size: 0.75rem; color: var(--text-secondary);">Cotizaciones oficiales de Compra, Venta y Cruces Cambiarios</div>
+                  </div>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px;">
+                  <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981; display: inline-block;"></span>
+                  <span>Actualizado en tiempo real</span>
                 </div>
               </div>
-              <div style="display: flex; gap: 16px; align-items: center;">
-                <div style="text-align: right;">
-                  <span style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">BCP Compra</span>
-                  <div id="bcp-buy-rate" style="font-size: 1.15rem; font-weight: 800; color: var(--accent-emerald);">S/ 3.525</div>
+
+              <!-- 3 Currency Rate Columns -->
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px;">
+                <!-- Dólar Card -->
+                <div style="background: rgba(15, 23, 42, 0.03); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px 14px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <span style="font-size: 0.76rem; font-weight: 800; color: var(--text-secondary);">DÓLAR (USD / PEN)</span>
+                    <span style="font-size: 0.70rem; color: var(--text-muted); font-weight: 600;">BCP Perú</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                    <div>
+                      <span style="font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; display: block;">Compra</span>
+                      <span id="bcp-usd-buy" style="font-size: 1.15rem; font-weight: 800; color: var(--accent-emerald);">S/ 3.525</span>
+                    </div>
+                    <div style="text-align: right;">
+                      <span style="font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; display: block;">Venta</span>
+                      <span id="bcp-usd-sale" style="font-size: 1.15rem; font-weight: 800; color: var(--accent-aqua);">S/ 3.540</span>
+                    </div>
+                  </div>
                 </div>
-                <div style="width: 1px; height: 28px; background: var(--border-color);"></div>
-                <div style="text-align: right;">
-                  <span style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">BCP Venta</span>
-                  <div id="bcp-sale-rate" style="font-size: 1.15rem; font-weight: 800; color: var(--accent-aqua);">S/ 3.540</div>
+
+                <!-- Euro Card -->
+                <div style="background: rgba(15, 23, 42, 0.03); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px 14px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <span style="font-size: 0.76rem; font-weight: 800; color: var(--text-secondary);">EURO (EUR / PEN)</span>
+                    <span style="font-size: 0.70rem; color: var(--text-muted); font-weight: 600;">BCP Mercado</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                    <div>
+                      <span style="font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; display: block;">Compra</span>
+                      <span id="bcp-eur-buy" style="font-size: 1.15rem; font-weight: 800; color: var(--accent-emerald);">S/ 3.820</span>
+                    </div>
+                    <div style="text-align: right;">
+                      <span style="font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; display: block;">Venta</span>
+                      <span id="bcp-eur-sale" style="font-size: 1.15rem; font-weight: 800; color: var(--accent-aqua);">S/ 3.960</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Cruce EUR / USD Card -->
+                <div style="background: rgba(15, 23, 42, 0.03); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px 14px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <span style="font-size: 0.76rem; font-weight: 800; color: var(--text-secondary);">DÓLAR & EURO (EUR / USD)</span>
+                    <span style="font-size: 0.70rem; color: var(--text-muted); font-weight: 600;">Forex / BCP</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                    <div>
+                      <span style="font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; display: block;">1 Euro (€) =</span>
+                      <span id="bcp-eur-usd" style="font-size: 1.15rem; font-weight: 800; color: var(--accent-primary);">$ 1.0870</span>
+                    </div>
+                    <div style="text-align: right;">
+                      <span style="font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; display: block;">1 Dólar ($) =</span>
+                      <span id="bcp-usd-eur" style="font-size: 1.15rem; font-weight: 800; color: var(--text-secondary);">€ 0.9200</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

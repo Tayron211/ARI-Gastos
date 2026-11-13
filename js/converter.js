@@ -12,10 +12,27 @@ const ConverterModule = {
     PEN: 3.5325
   },
   source: 'Banco de Crédito BCP',
-  bcpRates: {
+  usdRates: {
     compra: 3.525,
     venta: 3.540,
     promedio: 3.5325
+  },
+  eurRates: {
+    compra: 3.820,
+    venta: 3.960,
+    promedio: 3.890
+  },
+  crossRates: {
+    eurToUsd: 1.0870,
+    usdToEur: 0.9200
+  },
+  bcpRates: {
+    compra: 3.525,
+    venta: 3.540,
+    promedio: 3.5325,
+    eurCompra: 3.820,
+    eurVenta: 3.960,
+    eurPromedio: 3.890
   },
   lastUpdated: null,
   isLive: false,
@@ -144,6 +161,9 @@ const ConverterModule = {
           if (parsed.bcpRates) {
             this.bcpRates = parsed.bcpRates;
           }
+          if (parsed.usdRates) this.usdRates = parsed.usdRates;
+          if (parsed.eurRates) this.eurRates = parsed.eurRates;
+          if (parsed.crossRates) this.crossRates = parsed.crossRates;
           this.lastUpdated = parsed.lastUpdated ? new Date(parsed.lastUpdated) : new Date();
           this.isLive = true;
           this.updateStatusUI();
@@ -174,6 +194,9 @@ const ConverterModule = {
         if (!res.ok) throw new Error('BCP API status ' + res.status);
         const data = await res.json();
         if (!data || !data.rates || !data.rates.PEN) throw new Error('BCP payload error');
+        if (data.usd) this.usdRates = data.usd;
+        if (data.eur) this.eurRates = data.eur;
+        if (data.cross) this.crossRates = data.cross;
         if (data.bcp) {
           this.bcpRates = data.bcp;
         }
@@ -190,10 +213,16 @@ const ConverterModule = {
         if (!res.ok) throw new Error('API 1 status ' + res.status);
         const data = await res.json();
         if (!data.rates || !data.rates.PEN || !data.rates.EUR) throw new Error('API 1 format error');
+        const eurVal = Number(data.rates.EUR);
+        const penVal = Number(data.rates.PEN);
+        this.crossRates = {
+          eurToUsd: Math.round((1 / eurVal) * 10000) / 10000,
+          usdToEur: eurVal
+        };
         return {
           USD: 1.0,
-          EUR: Number(data.rates.EUR),
-          PEN: Number(data.rates.PEN)
+          EUR: eurVal,
+          PEN: penVal
         };
       },
       // 3. Global Fallback Provider B
@@ -202,10 +231,16 @@ const ConverterModule = {
         if (!res.ok) throw new Error('API 2 status ' + res.status);
         const data = await res.json();
         if (!data.rates || !data.rates.PEN || !data.rates.EUR) throw new Error('API 2 format error');
+        const eurVal = Number(data.rates.EUR);
+        const penVal = Number(data.rates.PEN);
+        this.crossRates = {
+          eurToUsd: Math.round((1 / eurVal) * 10000) / 10000,
+          usdToEur: eurVal
+        };
         return {
           USD: 1.0,
-          EUR: Number(data.rates.EUR),
-          PEN: Number(data.rates.PEN)
+          EUR: eurVal,
+          PEN: penVal
         };
       }
     ];
@@ -231,6 +266,9 @@ const ConverterModule = {
       localStorage.setItem('finanflow_exchange_rates', JSON.stringify({
         rates: this.rates,
         bcpRates: this.bcpRates,
+        usdRates: this.usdRates,
+        eurRates: this.eurRates,
+        crossRates: this.crossRates,
         source: this.source,
         lastUpdated: this.lastUpdated.toISOString()
       }));
@@ -242,7 +280,7 @@ const ConverterModule = {
       this.renderConversionTable();
 
       if (forceToast) {
-        Utils.showToast(`Cotizaciones BCP actualizadas (Compra: S/ ${this.bcpRates.compra.toFixed(3)} | Venta: S/ ${this.bcpRates.venta.toFixed(3)})`, 'success');
+        Utils.showToast(`Cotizaciones BCP actualizadas (Dólar: S/ ${this.usdRates.compra.toFixed(3)} | Euro: S/ ${this.eurRates.compra.toFixed(3)})`, 'success');
       }
     } else {
       console.warn('[Converter] No se pudo conectar a los proveedores en vivo, usando cotizaciones locales BCP.');
@@ -259,37 +297,67 @@ const ConverterModule = {
     const statusDot = document.getElementById('conv-status-dot');
     const statusText = document.getElementById('conv-status-text');
 
-    const bcpBuy = (this.bcpRates && this.bcpRates.compra) ? this.bcpRates.compra.toFixed(3) : '3.525';
-    const bcpSale = (this.bcpRates && this.bcpRates.venta) ? this.bcpRates.venta.toFixed(3) : '3.540';
+    const usdBuy = (this.usdRates && this.usdRates.compra) ? this.usdRates.compra.toFixed(3) : ((this.bcpRates && this.bcpRates.compra) ? this.bcpRates.compra.toFixed(3) : '3.525');
+    const usdSale = (this.usdRates && this.usdRates.venta) ? this.usdRates.venta.toFixed(3) : ((this.bcpRates && this.bcpRates.venta) ? this.bcpRates.venta.toFixed(3) : '3.540');
 
-    const bcpBuyEl = document.getElementById('bcp-buy-rate');
-    const bcpSaleEl = document.getElementById('bcp-sale-rate');
-    if (bcpBuyEl) bcpBuyEl.textContent = `S/ ${bcpBuy}`;
-    if (bcpSaleEl) bcpSaleEl.textContent = `S/ ${bcpSale}`;
+    const eurBuy = (this.eurRates && this.eurRates.compra) ? this.eurRates.compra.toFixed(3) : '3.820';
+    const eurSale = (this.eurRates && this.eurRates.venta) ? this.eurRates.venta.toFixed(3) : '3.960';
+
+    const eurToUsd = (this.crossRates && this.crossRates.eurToUsd) ? this.crossRates.eurToUsd.toFixed(4) : (this.getRate('EUR', 'USD')).toFixed(4);
+    const usdToEur = (this.crossRates && this.crossRates.usdToEur) ? this.crossRates.usdToEur.toFixed(4) : (this.getRate('USD', 'EUR')).toFixed(4);
+
+    // Update Dólar USD
+    const usdBuyEl = document.getElementById('bcp-usd-buy') || document.getElementById('bcp-buy-rate');
+    const usdSaleEl = document.getElementById('bcp-usd-sale') || document.getElementById('bcp-sale-rate');
+    if (usdBuyEl) usdBuyEl.textContent = `S/ ${usdBuy}`;
+    if (usdSaleEl) usdSaleEl.textContent = `S/ ${usdSale}`;
+
+    // Update Euro EUR
+    const eurBuyEl = document.getElementById('bcp-eur-buy');
+    const eurSaleEl = document.getElementById('bcp-eur-sale');
+    if (eurBuyEl) eurBuyEl.textContent = `S/ ${eurBuy}`;
+    if (eurSaleEl) eurSaleEl.textContent = `S/ ${eurSale}`;
+
+    // Update Cross EUR / USD
+    const eurUsdEl = document.getElementById('bcp-eur-usd');
+    const usdEurEl = document.getElementById('bcp-usd-eur');
+    if (eurUsdEl) eurUsdEl.textContent = `$ ${eurToUsd}`;
+    if (usdEurEl) usdEurEl.textContent = `€ ${usdToEur}`;
 
     if (statusDot && statusText) {
       if (isFallback) {
         statusDot.style.background = 'var(--accent-amber)';
-        statusText.textContent = `BCP (Referencial) · C: S/ ${bcpBuy} | V: S/ ${bcpSale}`;
+        statusText.textContent = `BCP (Referencial) · Dólar: S/ ${usdBuy} | Euro: S/ ${eurBuy}`;
       } else {
         statusDot.style.background = 'var(--accent-emerald)';
-        statusText.textContent = `Banco de Crédito BCP · Compra: S/ ${bcpBuy} | Venta: S/ ${bcpSale}`;
+        statusText.textContent = `Banco de Crédito BCP · Dólar: S/ ${usdBuy} / ${usdSale} · Euro: S/ ${eurBuy} / ${eurSale}`;
       }
     }
   },
 
   /**
-   * Update topbar real-time ticker with BCP branding
+   * Update topbar real-time ticker with authentic BCP logo and multi-currency values
    */
   updateLiveTickerUI() {
     const tickerText = document.getElementById('ticker-rates-text');
     if (!tickerText) return;
 
-    const bcpBuy = (this.bcpRates && this.bcpRates.compra) ? this.bcpRates.compra.toFixed(3) : '3.525';
-    const bcpSale = (this.bcpRates && this.bcpRates.venta) ? this.bcpRates.venta.toFixed(3) : '3.540';
-    const eurToPen = this.getRate('EUR', 'PEN').toFixed(3);
+    const usdBuy = (this.usdRates && this.usdRates.compra) ? this.usdRates.compra.toFixed(3) : ((this.bcpRates && this.bcpRates.compra) ? this.bcpRates.compra.toFixed(3) : '3.525');
+    const usdSale = (this.usdRates && this.usdRates.venta) ? this.usdRates.venta.toFixed(3) : ((this.bcpRates && this.bcpRates.venta) ? this.bcpRates.venta.toFixed(3) : '3.540');
 
-    tickerText.innerHTML = `<span style="color:#2dd4bf; font-weight:800; letter-spacing:0.3px;">BCP</span> Dólar: <strong>C</strong> S/ ${bcpBuy} <strong>V</strong> S/ ${bcpSale} &bull; <strong>EUR</strong> S/ ${eurToPen}`;
+    const eurBuy = (this.eurRates && this.eurRates.compra) ? this.eurRates.compra.toFixed(3) : '3.820';
+    const eurSale = (this.eurRates && this.eurRates.venta) ? this.eurRates.venta.toFixed(3) : '3.960';
+
+    const eurToUsd = (this.crossRates && this.crossRates.eurToUsd) ? this.crossRates.eurToUsd.toFixed(4) : (this.getRate('EUR', 'USD')).toFixed(4);
+
+    tickerText.innerHTML = `
+      <span style="display:inline-flex; align-items:center; background:#ffffff; padding:2px 6px; border-radius:4px; vertical-align:middle; margin-right:6px; box-shadow:0 1px 2px rgba(0,0,0,0.12);">
+        <img src="./icons/bcp-logo.svg" alt="BCP" style="height:12px; width:auto; display:block;" />
+      </span>
+      <strong>$ Dólar:</strong> C S/ ${usdBuy} V S/ ${usdSale} &bull; 
+      <strong>€ Euro:</strong> C S/ ${eurBuy} V S/ ${eurSale} &bull; 
+      <strong>1 EUR =</strong> $${eurToUsd}
+    `;
   },
 
   /**
