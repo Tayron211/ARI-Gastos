@@ -90,7 +90,7 @@ public class MainActivity extends Activity {
             }
         });
 
-        // Solicitar permisos de notificación si Android 13+
+        // Solicitar permisos de notificaciÃ³n si Android 13+
         if (Build.VERSION.SDK_INT >= 33) {
             if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
                 requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, REQ_POST_NOTIFICATIONS);

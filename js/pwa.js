@@ -68,11 +68,13 @@ const PWAController = {
     });
 
     if (installBtn) {
-      installBtn.addEventListener('click', () => this.triggerInstall());
+      installBtn.addEventListener('click', (e) => {
+        this.downloadApk();
+      });
     }
 
     document.querySelectorAll('#btn-download-apk, .btn-install-apk').forEach(btn => {
-      btn.addEventListener('click', () => this.triggerInstall());
+      btn.addEventListener('click', () => this.downloadApk());
     });
 
     const bannerBtn = document.getElementById('pwa-banner-install-btn');
@@ -96,6 +98,18 @@ const PWAController = {
         Utils.showToast('¡Ari-Gastos se instaló exitosamente como aplicación nativa!', 'success');
       }
     });
+  },
+
+  downloadApk() {
+    const a = document.createElement('a');
+    a.href = './ARI-Control.apk';
+    a.download = 'ARI-Control.apk';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    if (typeof Utils !== 'undefined' && Utils.showToast) {
+      Utils.showToast('Descargando archivo APK nativo de Ari-Control...', 'success');
+    }
   },
 
   async triggerInstall() {
