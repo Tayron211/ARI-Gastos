@@ -3,7 +3,7 @@
  * Progressive Web App Offline & Asset Caching Engine
  */
 
-const CACHE_NAME = 'ari-control-v2.4.2';
+const CACHE_NAME = 'ari-control-v2.4.3';
 
 const PRECACHE_ASSETS = [
   './',
@@ -87,8 +87,8 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Strategy A: Live exchange rate APIs -> Network first, fallback to cache
-  if (url.hostname.includes('er-api') || url.hostname.includes('exchangerate') || url.hostname.includes('currency-api')) {
+  // Strategy A: Live exchange rate APIs (Banco de Crédito BCP & Global Rates) -> Network first, fallback to cache
+  if (url.hostname.includes('er-api') || url.hostname.includes('exchangerate') || url.hostname.includes('currency-api') || url.pathname.includes('/api/bcp-rates')) {
     event.respondWith(
       fetch(request)
         .then((networkResponse) => {

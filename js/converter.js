@@ -5,11 +5,17 @@
  */
 
 const ConverterModule = {
-  // Baseline fallback exchange rates (relative to USD = 1.0)
+  // Baseline fallback exchange rates (Banco de Crédito BCP)
   rates: {
     USD: 1.0,
     EUR: 0.92,
-    PEN: 3.74
+    PEN: 3.5325
+  },
+  source: 'Banco de Crédito BCP',
+  bcpRates: {
+    compra: 3.525,
+    venta: 3.540,
+    promedio: 3.5325
   },
   lastUpdated: null,
   isLive: false,
@@ -19,6 +25,13 @@ const ConverterModule = {
   fromCurrency: 'EUR',
   toCurrency: 'PEN',
   amount: 100,
+
+  getBcpApiUrl() {
+    if (typeof window !== 'undefined' && window.location && window.location.origin && window.location.origin.includes('pages.dev')) {
+      return '/api/bcp-rates';
+    }
+    return 'https://ari-gastos.pages.dev/api/bcp-rates';
+  },
 
   init() {
     this.bindEvents();
@@ -128,6 +141,9 @@ const ConverterModule = {
         const parsed = JSON.parse(cached);
         if (parsed.rates && parsed.rates.PEN && parsed.rates.EUR) {
           this.rates = parsed.rates;
+          if (parsed.bcpRates) {
+            this.bcpRates = parsed.bcpRates;
+          }
           this.lastUpdated = parsed.lastUpdated ? new Date(parsed.lastUpdated) : new Date();
           this.isLive = true;
           this.updateStatusUI();
@@ -140,17 +156,35 @@ const ConverterModule = {
   },
 
   /**
-   * Resilient multi-tier live rate fetcher with instant fallback
+   * Resilient multi-tier live rate fetcher with BCP as Primary Authority
    */
   async fetchLiveRates(forceToast = false) {
     if (this.isFetching) return;
     this.isFetching = true;
 
     const statusEl = document.getElementById('conv-status-text');
-    if (statusEl) statusEl.textContent = 'Actualizando cotizaciones en vivo...';
+    if (statusEl) statusEl.textContent = 'Consultando Banco de Crédito BCP en vivo...';
 
-    // Provider endpoints in priority sequence
+    // Provider endpoints in priority sequence (BCP at #1)
     const providers = [
+      // 1. Banco de Crédito del Perú (BCP) Oficial
+      async () => {
+        const apiUrl = this.getBcpApiUrl();
+        const res = await fetch(apiUrl, { cache: 'no-cache' });
+        if (!res.ok) throw new Error('BCP API status ' + res.status);
+        const data = await res.json();
+        if (!data || !data.rates || !data.rates.PEN) throw new Error('BCP payload error');
+        if (data.bcp) {
+          this.bcpRates = data.bcp;
+        }
+        this.source = 'Banco de Crédito BCP';
+        return {
+          USD: 1.0,
+          EUR: Number(data.rates.EUR || 0.92),
+          PEN: Number(data.rates.PEN)
+        };
+      },
+      // 2. Global Fallback Provider A
       async () => {
         const res = await fetch('https://open.er-api.com/v6/latest/USD', { cache: 'no-cache' });
         if (!res.ok) throw new Error('API 1 status ' + res.status);
@@ -162,6 +196,7 @@ const ConverterModule = {
           PEN: Number(data.rates.PEN)
         };
       },
+      // 3. Global Fallback Provider B
       async () => {
         const res = await fetch('https://api.exchangerate-api.com/v4/latest/USD', { cache: 'no-cache' });
         if (!res.ok) throw new Error('API 2 status ' + res.status);
@@ -171,17 +206,6 @@ const ConverterModule = {
           USD: 1.0,
           EUR: Number(data.rates.EUR),
           PEN: Number(data.rates.PEN)
-        };
-      },
-      async () => {
-        const res = await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json', { cache: 'no-cache' });
-        if (!res.ok) throw new Error('API 3 status ' + res.status);
-        const data = await res.json();
-        if (!data.usd || !data.usd.pen || !data.usd.eur) throw new Error('API 3 format error');
-        return {
-          USD: 1.0,
-          EUR: Number(data.usd.eur),
-          PEN: Number(data.usd.pen)
         };
       }
     ];
@@ -206,6 +230,8 @@ const ConverterModule = {
       // Cache rates
       localStorage.setItem('finanflow_exchange_rates', JSON.stringify({
         rates: this.rates,
+        bcpRates: this.bcpRates,
+        source: this.source,
         lastUpdated: this.lastUpdated.toISOString()
       }));
 
@@ -216,15 +242,15 @@ const ConverterModule = {
       this.renderConversionTable();
 
       if (forceToast) {
-        Utils.showToast('Cotizaciones actualizadas en tiempo real', 'success');
+        Utils.showToast(`Cotizaciones BCP actualizadas (Compra: S/ ${this.bcpRates.compra.toFixed(3)} | Venta: S/ ${this.bcpRates.venta.toFixed(3)})`, 'success');
       }
     } else {
-      console.warn('[Converter] No se pudo conectar a los proveedores en vivo, usando cotizaciones locales.');
+      console.warn('[Converter] No se pudo conectar a los proveedores en vivo, usando cotizaciones locales BCP.');
       this.isLive = false;
       this.updateStatusUI(true);
       this.updateLiveTickerUI();
       if (forceToast) {
-        Utils.showToast('Usando tasas de cambio de referencia', 'info');
+        Utils.showToast('Usando tasas de cambio referenciales BCP', 'info');
       }
     }
   },
@@ -233,31 +259,37 @@ const ConverterModule = {
     const statusDot = document.getElementById('conv-status-dot');
     const statusText = document.getElementById('conv-status-text');
 
+    const bcpBuy = (this.bcpRates && this.bcpRates.compra) ? this.bcpRates.compra.toFixed(3) : '3.525';
+    const bcpSale = (this.bcpRates && this.bcpRates.venta) ? this.bcpRates.venta.toFixed(3) : '3.540';
+
+    const bcpBuyEl = document.getElementById('bcp-buy-rate');
+    const bcpSaleEl = document.getElementById('bcp-sale-rate');
+    if (bcpBuyEl) bcpBuyEl.textContent = `S/ ${bcpBuy}`;
+    if (bcpSaleEl) bcpSaleEl.textContent = `S/ ${bcpSale}`;
+
     if (statusDot && statusText) {
       if (isFallback) {
         statusDot.style.background = 'var(--accent-amber)';
-        statusText.textContent = `Modo Referencial · Última act: ${this.lastUpdated ? this.lastUpdated.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'Hoy'}`;
+        statusText.textContent = `BCP (Referencial) · C: S/ ${bcpBuy} | V: S/ ${bcpSale}`;
       } else {
         statusDot.style.background = 'var(--accent-emerald)';
-        statusText.textContent = `En tiempo real · Actualizado: ${this.lastUpdated ? this.lastUpdated.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'Hoy'}`;
+        statusText.textContent = `Banco de Crédito BCP · Compra: S/ ${bcpBuy} | Venta: S/ ${bcpSale}`;
       }
     }
   },
 
   /**
-   * Update topbar real-time ticker
+   * Update topbar real-time ticker with BCP branding
    */
   updateLiveTickerUI() {
     const tickerText = document.getElementById('ticker-rates-text');
     if (!tickerText) return;
 
-    const usdToPen = this.getRate('USD', 'PEN');
-    const eurToPen = this.getRate('EUR', 'PEN');
+    const bcpBuy = (this.bcpRates && this.bcpRates.compra) ? this.bcpRates.compra.toFixed(3) : '3.525';
+    const bcpSale = (this.bcpRates && this.bcpRates.venta) ? this.bcpRates.venta.toFixed(3) : '3.540';
+    const eurToPen = this.getRate('EUR', 'PEN').toFixed(3);
 
-    const formattedUsd = usdToPen.toLocaleString('es-PE', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
-    const formattedEur = eurToPen.toLocaleString('es-PE', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
-
-    tickerText.innerHTML = `<strong>USD</strong> S/ ${formattedUsd} &bull; <strong>EUR</strong> S/ ${formattedEur}`;
+    tickerText.innerHTML = `<span style="color:#2dd4bf; font-weight:800; letter-spacing:0.3px;">BCP</span> Dólar: <strong>C</strong> S/ ${bcpBuy} <strong>V</strong> S/ ${bcpSale} &bull; <strong>EUR</strong> S/ ${eurToPen}`;
   },
 
   /**
