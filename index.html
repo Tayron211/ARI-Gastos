@@ -1,0 +1,1596 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Ari-Control | Finanzas, Préstamos & Divisas</title>
+  <meta name="description"
+    content="Control de préstamos, seguimiento de pagos de solo intereses, cuotas, gastos y divisas en tiempo real.">
+
+  <!-- Security Hardening Meta Headers -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=()">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://open.er-api.com https://api.exchangerate-api.com https://cdn.jsdelivr.net; object-src 'none'; base-uri 'self';">
+
+  <!-- PWA & Mobile Native WebApp Capabilities -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0b0e14" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f1f5f9" media="(prefers-color-scheme: light)">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Ari-Control">
+
+  <!-- PWA Icons & Favicons -->
+  <link rel="shortcut icon" href="icons/icon.ico?v=2">
+  <link rel="icon" type="image/svg+xml" href="icons/favicon.svg?v=2">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=2">
+  <link rel="icon" type="image/png" sizes="64x64" href="icons/favicon.png?v=2">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+
+  <!-- Chart.js & SheetJS CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  <!-- CSS Stylesheets -->
+  <link rel="stylesheet" href="css/main.css?v=2.3.3">
+  <link rel="stylesheet" href="css/components.css?v=2.3.3">
+</head>
+
+<body>
+
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <div class="app-container">
+
+    <!-- ===================================================================
+         SPATIAL NAVIGATION RAIL / MOBILE DRAWER
+         =================================================================== -->
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-icon">
+          <img src="icons/icon-192.png?v=2" alt="Ari-Control Logo">
+        </div>
+        <div class="brand-info">
+          <h1>Ari-Control</h1>
+          <p>Finanzas & Préstamos</p>
+        </div>
+        <button class="sidebar-mobile-close" id="sidebar-close-btn" aria-label="Cerrar menú" type="button">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <ul class="nav-menu">
+        <li>
+          <a href="index.html" class="nav-item-btn active" data-tab="dashboard">
+            <div class="nav-icon-glass">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4 5a1 1 0 011-1h4a1 1 0 011 1v5a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10-3a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1v-7z" />
+              </svg>
+            </div>
+            <span>Inicio</span>
+          </a>
+        </li>
+        <li>
+          <a href="prestamos.html" class="nav-item-btn" data-tab="loans">
+            <div class="nav-icon-glass">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <span>Préstamos</span>
+            <span class="nav-badge" id="badge-count-loans">0</span>
+          </a>
+        </li>
+        <li>
+          <a href="gastos.html" class="nav-item-btn" data-tab="expenses">
+            <div class="nav-icon-glass">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </div>
+            <span>Gastos</span>
+            <span class="nav-badge" id="badge-count-expenses">0</span>
+          </a>
+        </li>
+        <li>
+          <a href="conversor.html" class="nav-item-btn" data-tab="converter">
+            <div class="nav-icon-glass">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+              </svg>
+            </div>
+            <span>Divisas</span>
+          </a>
+        </li>
+        <li>
+          <a href="reportes.html" class="nav-item-btn" data-tab="reports">
+            <div class="nav-icon-glass">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
+            <span>Reportes</span>
+          </a>
+        </li>
+      </ul>
+
+      <div class="sidebar-footer">
+        <!-- Prominent Android APK / PWA Native App Download Button -->
+        <div class="sidebar-apk-container">
+          <button class="btn-download-apk" id="btn-download-apk" type="button" aria-label="Descargar e Instalar App Android">
+            <div class="apk-icon-circle">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 17l6 6 6-6"/>
+                <path d="M12 3v18"/>
+                <rect x="5" y="11" width="14" height="10" rx="3" stroke-width="2"/>
+                <circle cx="9" cy="15" r="1" fill="currentColor"/>
+                <circle cx="15" cy="15" r="1" fill="currentColor"/>
+              </svg>
+            </div>
+            <div class="apk-info">
+              <span class="apk-title">Descargar APK / App</span>
+              <span class="apk-desc">Instalar nativa en Android</span>
+            </div>
+          </button>
+        </div>
+
+        <div class="sidebar-icon-bar">
+          <button class="sidebar-icon-action" id="theme-toggle-btn" title="Cambiar Modo Claro / Oscuro" aria-label="Cambiar Modo Claro / Oscuro" type="button">
+            <svg class="icon-sun" width="17" height="17" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            <svg class="icon-moon" width="17" height="17" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display: none;">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+            </svg>
+          </button>
+
+          <button class="sidebar-icon-action" id="btn-export-excel" onclick="ReportsModule.exportToExcelWithPivot()" title="Exportar a Excel (.xlsx)" aria-label="Exportar Excel" type="button">
+            <svg width="17" height="17" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </button>
+
+          <!-- PWA Install Icon Button -->
+          <button class="sidebar-icon-action pwa-install-btn" id="pwa-install-btn" title="Instalar App en Móvil o PC" aria-label="Instalar App" type="button">
+            <svg width="17" height="17" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <rect x="5" y="2" width="14" height="20" rx="2" ry="2" stroke-width="2"/>
+              <line x1="12" y1="18" x2="12.01" y2="18" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ===================================================================
+         MAIN APPLICATION WORKSPACE
+         =================================================================== -->
+    <main class="main-wrapper">
+
+      <!-- TOP FLOATING HEADER -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="page-title-group">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <h2 id="page-title">Centro de Control</h2>
+              <span class="pwa-offline-pill" id="pwa-offline-pill">
+                <span class="status-dot"></span>
+                <span>Offline</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="topbar-right">
+          <!-- Live Real-Time Currency Ticker -->
+          <div class="live-ticker-pill" id="live-ticker-pill" title="Cotizaciones en vivo. Clic para abrir conversor.">
+            <span class="live-pulse-dot"></span>
+            <span id="ticker-rates-text">En vivo: USD S/ ... &bull; EUR S/ ...</span>
+          </div>
+
+          <!-- Push Notifications Bell -->
+          <button class="topbar-notif-btn" id="btn-toggle-notifications" title="Alertas Push" type="button">
+            <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+            <span class="notif-badge" id="notif-badge" style="display: none;">0</span>
+          </button>
+
+          <!-- Strict Currency Filter Switcher -->
+          <div class="currency-filter-pill">
+            <button class="cur-pill-btn active" data-cur="PEN" id="top-cur-pen" type="button">
+              <span>S/ Soles</span>
+            </button>
+            <button class="cur-pill-btn" data-cur="EUR" id="top-cur-eur" type="button">
+              <span>€ Euros</span>
+            </button>
+          </div>
+
+          <!-- Hamburger Menu Button (Right Side for Mobile Ergonomics) -->
+          <button class="menu-toggle-btn" id="menu-toggle-btn" aria-label="Abrir menú" type="button">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 6h16M8 12h12M4 18h16" />
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- BODY VIEWS CONTAINER -->
+      <div class="content-body">
+
+        <!-- ===================================================================
+             VIEW 1: DASHBOARD
+             =================================================================== -->
+        <section class="view-section active" id="view-dashboard">
+
+          <!-- Compact Quick Action Bar -->
+          <div class="liquid-hero-banner" style="padding: 12px 16px;">
+            <span class="hero-daily-pill" onclick="App.switchTab('loans'); LoansModule.switchSubTab('agenda');" title="Ver agenda de hoy">
+              <span class="aqua-pulse-dot"></span>
+              <span>Cobrar Hoy: <strong id="dash-kpi-daily-coll">S/ 0.00</strong></span>
+            </span>
+            <div class="hero-actions">
+              <button class="btn btn-aqua-glow btn-sm" onclick="LoansModule.openAddModal()" type="button">
+                <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                <span>Préstamo</span>
+              </button>
+              <button class="btn btn-glass-light btn-sm" onclick="ExpensesModule.openAddModal()" type="button">
+                <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                <span>Gasto</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Clean 2x2 Mobile / 4-Column Desktop Bento KPI Grid -->
+          <div class="stats-grid">
+
+            <!-- 1. Por Cobrar -->
+            <div class="stat-card loans" onclick="App.switchTab('loans'); LoansModule.switchSubTab('portfolio');">
+              <div class="stat-card-header">
+                <span class="stat-card-title">Por Cobrar</span>
+                <div class="stat-card-icon">
+                  <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+              </div>
+              <div class="stat-amounts-group">
+                <span class="stat-val" id="dash-kpi-loans-rem">S/ 0.00</span>
+              </div>
+            </div>
+
+            <!-- 2. Recuperado -->
+            <div class="stat-card paid" onclick="App.switchTab('loans'); LoansModule.switchSubTab('portfolio');">
+              <div class="stat-card-header">
+                <span class="stat-card-title">Recuperado</span>
+                <div class="stat-card-icon">
+                  <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              </div>
+              <div class="stat-amounts-group">
+                <span class="stat-val" id="dash-kpi-loans-paid" style="color: var(--text-emerald);">S/ 0.00</span>
+              </div>
+            </div>
+
+            <!-- 3. Solo Interés -->
+            <div class="stat-card interest-only-kpi" onclick="App.switchTab('loans'); LoansModule.switchSubTab('interest-only');">
+              <div class="stat-card-header">
+                <span class="stat-card-title">Solo Interés</span>
+                <div class="stat-card-icon">
+                  <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <line x1="19" y1="5" x2="5" y2="19"></line>
+                    <circle cx="6.5" cy="6.5" r="2.5"></circle>
+                    <circle cx="17.5" cy="17.5" r="2.5"></circle>
+                  </svg>
+                </div>
+              </div>
+              <div class="stat-amounts-group">
+                <span class="stat-val" id="dash-kpi-interest-only" style="color: var(--text-amber);">S/ 0.00</span>
+              </div>
+            </div>
+
+            <!-- 4. Mis Gastos -->
+            <div class="stat-card expenses" onclick="App.switchTab('expenses')">
+              <div class="stat-card-header">
+                <span class="stat-card-title">Mis Gastos</span>
+                <div class="stat-card-icon">
+                  <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
+                  </svg>
+                </div>
+              </div>
+              <div class="stat-amounts-group">
+                <span class="stat-val" id="dash-kpi-expenses" style="color: var(--text-rose);">S/ 0.00</span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Quick Activity Lists (Loans & Expenses First for Instant Action) -->
+          <div class="charts-grid">
+            <div class="glass-panel" style="margin-bottom: 0;">
+              <div class="panel-header">
+                <div class="panel-title-group">
+                  <h3>
+                    <svg width="18" height="18" fill="none" stroke="var(--accent-aqua)" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                    <span>Deudores Activos</span>
+                  </h3>
+                </div>
+                <button class="btn btn-aqua-glow btn-sm" onclick="LoansModule.openAddModal()" type="button">+ Préstamo</button>
+              </div>
+              <div id="dash-urgent-obligations"></div>
+            </div>
+
+            <div class="glass-panel" style="margin-bottom: 0;">
+              <div class="panel-header">
+                <div class="panel-title-group">
+                  <h3>
+                    <svg width="18" height="18" fill="none" stroke="var(--accent-rose)" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
+                    <span>Últimos Gastos (<span class="active-currency-name-text">Soles</span>)</span>
+                  </h3>
+                </div>
+                <button class="btn btn-primary btn-sm" onclick="ExpensesModule.openAddModal()" type="button">+ Nuevo Gasto</button>
+              </div>
+              <div id="dash-recent-expenses"></div>
+            </div>
+          </div>
+
+          <!-- Charts Summary Grid -->
+          <div class="charts-grid" style="margin-top: 20px;">
+            <div class="glass-panel" style="margin-bottom: 0;">
+              <div class="panel-header">
+                <div class="panel-title-group">
+                  <h3>Distribución de Gastos</h3>
+                </div>
+              </div>
+              <div style="position: relative; height: 260px;">
+                <canvas id="chart-category-expenses"></canvas>
+              </div>
+            </div>
+
+            <div class="glass-panel" style="margin-bottom: 0;">
+              <div class="panel-header">
+                <div class="panel-title-group">
+                  <h3>Balance: Gastos vs Cartera y Cobros</h3>
+                </div>
+              </div>
+              <div style="position: relative; height: 260px;">
+                <canvas id="chart-obligations-comparison"></canvas>
+              </div>
+            </div>
+          </div>
+
+        </section>
+
+
+        <!-- ===================================================================
+             VIEW 2: MIS GASTOS (EXPENSES)
+             =================================================================== -->
+        <section class="view-section" id="view-expenses">
+
+          <div class="glass-panel">
+            <div class="panel-header">
+              <div class="panel-title-group">
+                <h3>Gastos (<span class="active-currency-name-text">Soles</span>)</h3>
+              </div>
+
+              <div class="panel-controls">
+                <!-- Search -->
+                <div class="search-box">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  <input type="text" id="expense-search" placeholder="Buscar por concepto o nota...">
+                </div>
+
+                <!-- Category Filter -->
+                <select class="filter-select" id="expense-category-filter">
+                  <option value="ALL">Todas las categorías</option>
+                  <option value="Alimentación">Alimentación</option>
+                  <option value="Vivienda">Vivienda</option>
+                  <option value="Servicios">Servicios</option>
+                  <option value="Transporte">Transporte</option>
+                  <option value="Salud">Salud</option>
+                  <option value="Educación">Educación</option>
+                  <option value="Entretenimiento">Entretenimiento</option>
+                  <option value="Compras">Compras</option>
+                  <option value="Ahorro/Inversión">Ahorro/Inversión</option>
+                  <option value="Otros">Otros</option>
+                </select>
+
+                <!-- Month Filter -->
+                <select class="filter-select" id="expense-month-filter" title="Filtrar por Mes">
+                  <option value="ALL">Todos los meses</option>
+                </select>
+
+                <!-- Add Button -->
+                <button class="btn btn-aqua-glow" id="btn-open-expense-modal" onclick="ExpensesModule.openAddModal()" type="button">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4"
+                      d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  <span>Registrar Gasto</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Single Active Currency Subtotal Pill -->
+            <div class="expense-subtotal-banner">
+              <span id="expense-total-label">Total Gastos (<span class="active-currency-name-text">Soles</span>):</span>
+              <strong id="expense-total-active">S/ 0.00</strong>
+            </div>
+
+            <!-- Expenses Table -->
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Concepto & Notas</th>
+                    <th>Categoría</th>
+                    <th>Método de Pago</th>
+                    <th>Fecha</th>
+                    <th>Monto</th>
+                    <th style="text-align: right;">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="expenses-table-body">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Empty State -->
+            <div class="empty-state" id="expenses-empty-state" style="display: none;">
+              <div class="empty-state-icon">
+                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                  <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/>
+                  <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/>
+                  <path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>
+                </svg>
+              </div>
+              <h4>No hay gastos en <span class="active-currency-name-text">Soles</span></h4>
+              <p>No tienes gastos registrados en esta divisa. ¡Registra uno nuevo para comenzar!</p>
+              <button class="btn btn-primary btn-sm" onclick="ExpensesModule.openAddModal()" type="button">+ Agregar gasto en <span
+                  class="active-currency-name-text">Soles</span></button>
+            </div>
+
+          </div>
+
+        </section>
+
+
+        <!-- ===================================================================
+             VIEW 3: PRÉSTAMOS, COBRANZAS & DETECTOR DE SOLO INTERESES
+             =================================================================== -->
+        <section class="view-section" id="view-loans">
+
+          <!-- Prestamista Segmented Crystal Glass Sub-Navigation -->
+          <div class="prestamista-tabs-container">
+            <button class="prestamista-tab-btn active" id="subtab-btn-agenda" onclick="LoansModule.switchSubTab('agenda')" type="button">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <span>Hoy</span>
+              <span class="badge-pill" id="badge-agenda-count">0</span>
+            </button>
+            <button class="prestamista-tab-btn" id="subtab-btn-portfolio" onclick="LoansModule.switchSubTab('portfolio')" type="button">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              <span>Cartera</span>
+              <span class="badge-pill" id="badge-portfolio-count">0</span>
+            </button>
+            <button class="prestamista-tab-btn" id="subtab-btn-interest-only" onclick="LoansModule.switchSubTab('interest-only')" type="button">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
+              <span>Solo Interés</span>
+              <span class="badge-pill badge-aqua" id="badge-interest-only-count">0</span>
+            </button>
+            <button class="prestamista-tab-btn" id="subtab-btn-simulator" onclick="LoansModule.switchSubTab('simulator')" type="button">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="10" y2="10"/><line x1="14" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="10" y2="14"/><line x1="14" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="16" y2="18"/></svg>
+              <span>Simular</span>
+            </button>
+          </div>
+
+          <!-- ==========================================
+               SUBVIEW 1: COBRANZAS DE HOY (AGENDA DIARIA)
+               ========================================== -->
+          <div id="subview-agenda">
+            <!-- Banner de Resumen de Cobranzas del Día -->
+            <div class="daily-collection-banner">
+              <div class="daily-kpi-item">
+                <span class="daily-kpi-label">Meta a Cobrar Hoy</span>
+                <span class="daily-kpi-val" id="agenda-kpi-expected">S/ 0.00</span>
+              </div>
+              <div class="daily-kpi-item">
+                <span class="daily-kpi-label">Recaudado Hoy</span>
+                <span class="daily-kpi-val" id="agenda-kpi-collected" style="color: var(--accent-emerald);">S/ 0.00</span>
+              </div>
+              <div class="daily-kpi-item">
+                <span class="daily-kpi-label">Falta Cobrar Hoy</span>
+                <span class="daily-kpi-val" id="agenda-kpi-pending" style="color: var(--accent-amber);">S/ 0.00</span>
+              </div>
+              <div class="daily-kpi-item">
+                <span class="daily-kpi-label">Deudores en Mora</span>
+                <span class="daily-kpi-val" id="agenda-kpi-overdue" style="color: var(--accent-rose);">0</span>
+              </div>
+            </div>
+
+            <!-- Header with Quick Action -->
+            <div class="section-sub-header">
+              <div>
+                <h3>Agenda del Día</h3>
+              </div>
+              <button class="btn btn-aqua-glow btn-sm" onclick="LoansModule.openAddModal()" type="button">
+                <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                <span>Nuevo Préstamo</span>
+              </button>
+            </div>
+
+            <!-- List Container -->
+            <div class="agenda-cards-grid" id="agenda-items-container">
+              <!-- Rendered dynamically -->
+            </div>
+
+            <!-- Empty State for Agenda -->
+            <div class="empty-state glass-panel" id="agenda-empty-state" style="display: none; padding: 44px 20px;">
+              <div class="empty-state-icon" style="color: var(--text-emerald); background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.28);">
+                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                  <path d="M9 16l2 2 4-4"></path>
+                </svg>
+              </div>
+              <h4>Sin cobros pendientes hoy</h4>
+              <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 6px;">
+                <button class="btn btn-aqua-glow btn-sm" onclick="LoansModule.switchSubTab('portfolio')" type="button">Ver Cartera →</button>
+                <button class="btn btn-interest-glass btn-sm" onclick="LoansModule.switchSubTab('interest-only')" type="button">
+                  <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
+                  <span>Solo Interés</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ==========================================
+               SUBVIEW 2: CARTERA DE PRÉSTAMOS COMPLETA
+               ========================================== -->
+          <div id="subview-portfolio" style="display: none;">
+            <div class="glass-panel">
+              <div class="panel-header">
+                <div class="panel-title-group">
+                  <h3>Cartera (<span class="active-currency-name-text">Soles</span>)</h3>
+                </div>
+
+                <div class="panel-controls">
+                  <div class="search-box">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <input type="text" id="loan-search" placeholder="Buscar deudor, DNI, nota...">
+                  </div>
+
+                  <select class="filter-select" id="loan-status-filter">
+                    <option value="ALL">Todos los deudores</option>
+                    <option value="interest-only">Pagaron Solo Interés</option>
+                    <option value="due-today">Toca Cobrar Hoy</option>
+                    <option value="overdue">En Mora / Atrasados</option>
+                    <option value="in-progress">Al Día / En Pago</option>
+                    <option value="paid">100% Liquidados</option>
+                  </select>
+
+                  <button class="btn btn-aqua-glow" onclick="LoansModule.openAddModal()" type="button">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    <span>Nuevo Préstamo</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Strip de Resumen Financiero de la Cartera (4 Tarjetas Básicas de Alto Contraste) -->
+              <div class="portfolio-summary-strip">
+                <div class="strip-kpi-box kpi-rose">
+                  <span class="strip-kpi-label">Por Cobrar</span>
+                  <strong class="strip-kpi-val" style="color: var(--text-rose);" id="loan-kpi-rem-active">S/ 0.00</strong>
+                </div>
+                <div class="strip-kpi-box kpi-emerald">
+                  <span class="strip-kpi-label">Cobrado Cuotas</span>
+                  <strong class="strip-kpi-val" style="color: var(--text-emerald);" id="loan-kpi-paid-active">S/ 0.00</strong>
+                </div>
+                <div class="strip-kpi-box kpi-gold">
+                  <span class="strip-kpi-label">Solo Interés</span>
+                  <strong class="strip-kpi-val" style="color: var(--text-amber);" id="loan-kpi-interest-only-active">S/ 0.00</strong>
+                </div>
+                <div class="strip-kpi-box kpi-indigo">
+                  <span class="strip-kpi-label">Total Prestado</span>
+                  <strong class="strip-kpi-val" style="color: var(--text-indigo);" id="loan-kpi-total-active">S/ 0.00</strong>
+                </div>
+              </div>
+
+              <!-- Cards Grid -->
+              <div class="cards-grid" id="loans-cards-container">
+                <!-- Rendered dynamically -->
+              </div>
+
+              <!-- Empty State -->
+              <div class="empty-state" id="loans-empty-state" style="display: none;">
+                <div class="empty-state-icon">
+                  <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                  </svg>
+                </div>
+                <h4>Sin préstamos en <span class="active-currency-name-text">Soles</span></h4>
+                <button class="btn btn-aqua-glow btn-sm" onclick="LoansModule.openAddModal()" type="button">+ Registrar Préstamo</button>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ==========================================
+               SUBVIEW 3: DETECTOR Y CONTROL DE "SOLO INTERESES"
+               ========================================== -->
+          <div id="subview-interest-only" style="display: none;">
+            <div class="glass-panel">
+              <div class="panel-header">
+                <div class="panel-title-group">
+                  <h3>
+                    <svg width="18" height="18" fill="none" stroke="var(--text-amber)" stroke-width="2" viewBox="0 0 24 24"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
+                    <span>Deudores en "Solo Interés"</span>
+                  </h3>
+                </div>
+                <button class="btn btn-secondary btn-sm" onclick="LoansModule.switchSubTab('portfolio')" type="button">
+                  <span>Ver Cartera →</span>
+                </button>
+              </div>
+
+              <!-- Resumen de Solo Intereses -->
+              <div class="interest-only-overview-banner" id="interest-only-overview-banner">
+                <!-- Rendered dynamically -->
+              </div>
+
+              <!-- Lista de Deudores y Registro de Pagos de Solo Interés -->
+              <div id="interest-only-list-container">
+                <!-- Rendered dynamically -->
+              </div>
+            </div>
+          </div>
+
+          <!-- ==========================================
+               SUBVIEW 4: SIMULADOR & COTIZADOR RÁPIDO
+               ========================================== -->
+          <div id="subview-simulator" style="display: none;">
+            <div class="simulator-wrapper">
+              <div>
+                <div style="margin-bottom: 16px;">
+                  <h3 style="font-family: var(--font-heading); font-size: 1.2rem; margin: 0; color: var(--text-primary);">Simulador de Préstamos</h3>
+                </div>
+
+                <div class="form-row-2">
+                  <div class="form-group">
+                    <label class="form-label" for="sim-principal">Capital a Prestar (S/) *</label>
+                    <input type="number" id="sim-principal" class="form-input" value="1000" min="10" step="10" style="font-size: 1.15rem; font-weight: 700; font-family: var(--font-heading);">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="sim-rate">Tasa de Interés Total (%) *</label>
+                    <div style="display: flex; gap: 8px;">
+                      <input type="number" id="sim-rate" class="form-input" value="20" min="0" step="1" style="font-size: 1.15rem; font-weight: 700; font-family: var(--font-heading);">
+                      <select id="sim-rate-presets" class="form-select" style="max-width: 110px;" onchange="document.getElementById('sim-rate').value = this.value; LoansModule.calculateSimulator();">
+                        <option value="10">10%</option>
+                        <option value="15">15%</option>
+                        <option value="20" selected>20%</option>
+                        <option value="25">25%</option>
+                        <option value="30">30%</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-row-2">
+                  <div class="form-group">
+                    <label class="form-label" for="sim-frequency">Modalidad de Cobro</label>
+                    <select id="sim-frequency" class="form-select" onchange="LoansModule.calculateSimulator();">
+                      <option value="daily" selected>Diario (Lunes a Sábado - Sin Domingos)</option>
+                      <option value="daily_all">Diario (Todos los Días)</option>
+                      <option value="weekly">Semanal (Cada 7 Días)</option>
+                      <option value="biweekly">Quincenal (Cada 15 Días)</option>
+                      <option value="monthly">Mensual (Cada Mes)</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="sim-installments">Cantidad de Cuotas *</label>
+                    <input type="number" id="sim-installments" class="form-input" value="24" min="1" max="360" style="font-size: 1.15rem; font-weight: 700; font-family: var(--font-heading);">
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="sim-start-date">Fecha de Desembolso / Inicio</label>
+                  <input type="date" id="sim-start-date" class="form-input">
+                </div>
+              </div>
+
+              <!-- Result Breakdown -->
+              <div class="simulator-result-box">
+                <div>
+                  <div style="font-size: 0.74rem; color: var(--accent-aqua); text-transform: uppercase; font-weight: 800; letter-spacing: 0.06em;">Proyección Financiera</div>
+                  <div class="sim-highlight-card">
+                    <div style="font-size: 0.78rem; color: var(--text-secondary);">Monto de cada Cuota (Capital + Interés):</div>
+                    <div style="font-family: var(--font-heading); font-size: 1.9rem; font-weight: 800; color: var(--accent-aqua);" id="sim-res-cuota">S/ 50.00</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;" id="sim-res-cuota-detail">24 cuotas diarias</div>
+                  </div>
+
+                  <div class="simulator-kpis">
+                    <div class="sim-kpi">
+                      <div class="sim-kpi-label">Capital Prestado</div>
+                      <div class="sim-kpi-val" id="sim-res-principal">S/ 1,000.00</div>
+                    </div>
+                    <div class="sim-kpi">
+                      <div class="sim-kpi-label">Ganancia Interés Total</div>
+                      <div class="sim-kpi-val" id="sim-res-interest" style="color: var(--accent-amber);">+ S/ 200.00</div>
+                    </div>
+                    <div class="sim-kpi">
+                      <div class="sim-kpi-label">Total a Cobrar</div>
+                      <div class="sim-kpi-val" id="sim-res-total" style="color: var(--accent-primary);">S/ 1,200.00</div>
+                    </div>
+                    <div class="sim-kpi">
+                      <div class="sim-kpi-label">Fecha de Término</div>
+                      <div class="sim-kpi-val" id="sim-res-end-date" style="font-size: 0.95rem; color: var(--text-secondary);">-</div>
+                    </div>
+                  </div>
+                </div>
+
+                <button class="btn btn-aqua-glow" style="width: 100%; font-weight: 700; padding: 13px;" onclick="LoansModule.createLoanFromSimulator()" type="button">
+                  <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                  <span>Crear Préstamo con estos Datos</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </section>
+
+
+        <!-- ===================================================================
+             VIEW 4: CONVERSOR DE MONEDA EN TIEMPO REAL
+             =================================================================== -->
+        <section class="view-section" id="view-converter">
+
+          <div class="glass-panel">
+            <div class="panel-header">
+              <div class="panel-title-group">
+                <h3>Conversor de Divisas</h3>
+              </div>
+
+              <div class="panel-controls">
+                <div class="live-status-capsule">
+                  <span id="conv-status-dot"></span>
+                  <span id="conv-status-text">En tiempo real</span>
+                </div>
+
+                <button class="btn btn-secondary btn-sm" id="conv-refresh-btn" title="Actualizar cotizaciones" type="button">
+                  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  <span>Actualizar Tasas</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Main Converter Grid -->
+            <div class="converter-main-grid">
+
+              <!-- Calculator Card -->
+              <div class="converter-card">
+
+                <!-- Amount Input -->
+                <div class="form-group">
+                  <label class="form-label" for="conv-amount" style="font-size: 0.9rem; font-weight: 700;">Monto a
+                    Convertir</label>
+                  <input type="number" id="conv-amount" class="form-input" value="100" min="0.01" step="any"
+                    style="font-size: 1.3rem; font-weight: 800; font-family: var(--font-heading); padding: 13px 16px;">
+                </div>
+
+                <!-- From / Swap / To Selectors -->
+                <div class="converter-input-row">
+                  <div class="currency-select-box">
+                    <label class="form-label" for="conv-from">De (Moneda Origen)</label>
+                    <select id="conv-from" class="form-select" style="font-weight: 700; padding: 12px;">
+                      <option value="EUR" selected>EUR - Euro (€)</option>
+                      <option value="PEN">PEN - Sol Peruano (S/)</option>
+                      <option value="USD">USD - Dólar Estadounidense ($)</option>
+                    </select>
+                  </div>
+
+                  <button class="swap-btn-circular" id="conv-swap-btn" title="Intercambiar divisas" type="button">
+                    <svg id="conv-swap-icon" width="20" height="20" fill="none" stroke="currentColor"
+                      viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"
+                        d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                    </svg>
+                  </button>
+
+                  <div class="currency-select-box">
+                    <label class="form-label" for="conv-to">A (Moneda Destino)</label>
+                    <select id="conv-to" class="form-select" style="font-weight: 700; padding: 12px;">
+                      <option value="PEN" selected>PEN - Sol Peruano (S/)</option>
+                      <option value="EUR">EUR - Euro (€)</option>
+                      <option value="USD">USD - Dólar Estadounidense ($)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Result Box -->
+                <div class="converter-result-display">
+                  <div style="font-size: 0.78rem; color: var(--accent-aqua); text-transform: uppercase; font-weight: 800; letter-spacing: 0.06em;">
+                    Resultado Convertido</div>
+                  <div class="converter-result-amount" id="conv-result-val">S/ 410.00</div>
+                  <div style="display: flex; gap: 14px; font-size: 0.82rem; color: var(--text-secondary); margin-top: 4px; flex-wrap: wrap; justify-content: center;">
+                    <span id="conv-rate-info" style="font-weight: 700;">1 EUR = 4.1000 PEN</span>
+                    <span>•</span>
+                    <span id="conv-inv-rate-info" style="color: var(--text-muted);">1 PEN = 0.2439 EUR</span>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- Quick Conversion Table -->
+              <div class="glass-panel" style="margin-bottom: 0; display: flex; flex-direction: column;">
+                <div class="panel-header" style="margin-bottom: 12px;">
+                  <div class="panel-title-group">
+                    <h4 style="font-size: 1rem; font-family: var(--font-heading);">Equivalencias</h4>
+                  </div>
+                </div>
+
+                <div class="table-responsive" style="flex: 1; max-height: 320px;">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th>Origen</th>
+                        <th>Destino</th>
+                      </tr>
+                    </thead>
+                    <tbody id="conv-matrix-body">
+                      <!-- Rendered dynamically -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+        </section>
+
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- ===================================================================
+       NATIVE MOBILE APPLE LIQUID GLASS BOTTOM TAB BAR (DOCK MÓVIL)
+       =================================================================== -->
+  <nav class="mobile-liquid-dock" aria-label="Navegación Móvil">
+    <button class="dock-tab-btn active" data-tab="dashboard" type="button">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.1"
+          d="M4 5a1 1 0 011-1h4a1 1 0 011 1v5a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10-3a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1v-7z" />
+      </svg>
+      <span>Inicio</span>
+    </button>
+
+    <button class="dock-tab-btn" data-tab="loans" type="button">
+      <div class="dock-icon-wrap">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.1"
+            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span class="dock-mini-badge" id="dock-badge-loans">0</span>
+      </div>
+      <span>Préstamos</span>
+    </button>
+
+    <!-- Central Floating Aqua Action Button -->
+    <button class="dock-fab-btn" onclick="App.handleMobileQuickAdd()" type="button" title="Acción Rápida">
+      <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.6" d="M12 5v14m-7-7h14" />
+      </svg>
+    </button>
+
+    <button class="dock-tab-btn" data-tab="expenses" type="button">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.1"
+          d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+      </svg>
+      <span>Gastos</span>
+    </button>
+
+    <button class="dock-tab-btn" data-tab="converter" type="button">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.1"
+          d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+      </svg>
+      <span>Divisas</span>
+    </button>
+  </nav>
+
+
+  <!-- ===================================================================
+       MODAL 1: NUEVO / EDITAR GASTO
+       =================================================================== -->
+  <div class="modal-backdrop" id="modal-expense">
+    <div class="modal-dialog">
+      <div class="modal-sheet-grabber"></div>
+      <div class="modal-header">
+        <h3 id="expense-modal-title">Nuevo Gasto</h3>
+        <button class="modal-close-btn" data-close-modal="modal-expense" type="button">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <span>Cerrar</span>
+        </button>
+      </div>
+      <form id="expense-form">
+        <div class="modal-body">
+          <input type="hidden" id="expense-id">
+
+          <!-- Currency Picker -->
+          <div class="form-group">
+            <div class="currency-picker-group">
+              <label class="currency-radio-btn selected-pen" id="exp-cur-pen-label">
+                <input type="radio" name="expense-currency" id="exp-cur-pen" value="PEN" checked>
+                <span>Soles (S/)</span>
+              </label>
+              <label class="currency-radio-btn" id="exp-cur-eur-label">
+                <input type="radio" name="expense-currency" id="exp-cur-eur" value="EUR">
+                <span>Euros (€)</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Title -->
+          <div class="form-group">
+            <label class="form-label" for="expense-title">Concepto *</label>
+            <input type="text" id="expense-title" class="form-input" placeholder="Ej. Alquiler, UCV, Supermercado..."
+              required>
+          </div>
+
+          <!-- Amount and Category -->
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label" for="expense-amount">Monto *</label>
+              <input type="number" id="expense-amount" class="form-input" step="0.01" min="0.01" placeholder="0.00"
+                required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="expense-category">Categoría *</label>
+              <select id="expense-category" class="form-select" required>
+                <option value="Alimentación">Alimentación</option>
+                <option value="Vivienda">Vivienda</option>
+                <option value="Servicios">Servicios</option>
+                <option value="Transporte">Transporte</option>
+                <option value="Salud">Salud</option>
+                <option value="Educación">Educación</option>
+                <option value="Entretenimiento">Entretenimiento</option>
+                <option value="Compras">Compras</option>
+                <option value="Ahorro/Inversión">Ahorro / Inversión</option>
+                <option value="Otros">Otros</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Date and Payment Method -->
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label" for="expense-date">Fecha *</label>
+              <input type="date" id="expense-date" class="form-input" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="expense-payment-method">Método de Pago</label>
+              <select id="expense-payment-method" class="form-select">
+                <option value="Billetera Digital (Yape/Plin)">Billetera Digital (Yape/Plin)</option>
+                <option value="Efectivo">Efectivo</option>
+                <option value="Transferencia">Transferencia Bancaria</option>
+                <option value="Tarjeta de Débito">Tarjeta de Débito</option>
+                <option value="Tarjeta de Crédito">Tarjeta de Crédito</option>
+                <option value="Bizum / SEPA">Bizum / SEPA</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Notes -->
+          <div class="form-group">
+            <label class="form-label" for="expense-notes">Notas (Opcional)</label>
+            <textarea id="expense-notes" class="form-textarea" rows="2"
+              placeholder="Detalles adicionales..."></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close-modal="modal-expense">Cerrar</button>
+          <button type="submit" class="btn btn-aqua-glow">Guardar Gasto</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ===================================================================
+       MODAL 2: NUEVO / EDITAR PRÉSTAMO (MODO PRESTAMISTA PERÚ)
+       =================================================================== -->
+  <div class="modal-backdrop" id="modal-loan">
+    <div class="modal-dialog" style="max-width: 620px;">
+      <div class="modal-sheet-grabber"></div>
+      <div class="modal-header">
+        <h3 id="loan-modal-title">Nuevo Préstamo</h3>
+        <button class="modal-close-btn" data-close-modal="modal-loan" type="button">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <span>Cerrar</span>
+        </button>
+      </div>
+      <form id="loan-form">
+        <div class="modal-body" style="max-height: 75vh; overflow-y: auto;">
+          <input type="hidden" id="loan-id">
+
+          <!-- Currency Picker -->
+          <div class="form-group" style="margin-bottom: 14px;">
+            <div class="currency-picker-group">
+              <label class="currency-radio-btn selected-pen" id="loan-cur-pen-label">
+                <input type="radio" name="loan-currency" id="loan-cur-pen" value="PEN" checked>
+                <span>Soles (S/)</span>
+              </label>
+              <label class="currency-radio-btn" id="loan-cur-eur-label">
+                <input type="radio" name="loan-currency" id="loan-cur-eur" value="EUR">
+                <span>Euros (€)</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- SECCIÓN A: DATOS DEL CLIENTE -->
+          <div class="modal-glass-section">
+            <div class="form-group">
+              <label class="form-label" for="loan-entity">Nombre del Deudor *</label>
+              <input type="text" id="loan-entity" class="form-input" placeholder="Ej. Juan Carlos Pérez o Lizy" required>
+            </div>
+
+            <div class="form-row-2">
+              <div class="form-group">
+                <label class="form-label" for="loan-client-dni">DNI / RUC</label>
+                <input type="text" id="loan-client-dni" class="form-input" placeholder="Ej. 71234567" maxlength="11">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="loan-client-phone">Celular / WhatsApp</label>
+                <input type="tel" id="loan-client-phone" class="form-input" placeholder="Ej. 987654321" maxlength="12">
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" for="loan-client-address">Dirección / Referencia</label>
+              <input type="text" id="loan-client-address" class="form-input" placeholder="Ej. Mercado Central Puesto #14">
+            </div>
+          </div>
+
+          <!-- SECCIÓN B: CONDICIONES FINANCIERAS -->
+          <div class="modal-glass-section">
+            <div class="form-row-2">
+              <div class="form-group">
+                <label class="form-label" for="loan-principal-amount">Capital Prestado *</label>
+                <input type="number" id="loan-principal-amount" class="form-input" step="0.01" min="1" placeholder="Ej. 400.00" style="font-size: 1.05rem; font-weight: 700; font-family: var(--font-heading);" required>
+              </div>
+              <div class="form-group">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                  <label class="form-label" for="loan-interest-rate" style="margin-bottom: 0;">Interés (%)</label>
+                  <div style="display: flex; gap: 3px;">
+                    <button type="button" class="btn btn-secondary btn-sm" style="padding: 2px 6px; font-size: 0.68rem;" onclick="LoansModule.setRatePreset(0)">0%</button>
+                    <button type="button" class="btn btn-secondary btn-sm" style="padding: 2px 6px; font-size: 0.68rem;" onclick="LoansModule.setRatePreset(10)">10%</button>
+                    <button type="button" class="btn btn-secondary btn-sm" style="padding: 2px 6px; font-size: 0.68rem;" onclick="LoansModule.setRatePreset(15)">15%</button>
+                    <button type="button" class="btn btn-secondary btn-sm" style="padding: 2px 6px; font-size: 0.68rem;" onclick="LoansModule.setRatePreset(20)">20%</button>
+                  </div>
+                </div>
+                <input type="number" id="loan-interest-rate" class="form-input" step="0.1" min="0" value="20" placeholder="Ej. 20" style="font-size: 1.05rem; font-weight: 700; font-family: var(--font-heading);">
+              </div>
+            </div>
+
+            <input type="hidden" id="loan-interest-amount" value="0">
+            <input type="hidden" id="loan-total-amount" value="0">
+            <input type="hidden" id="loan-custom-interest-payment" value="">
+            <input type="hidden" id="loan-first-payment-date" value="">
+            <input type="hidden" id="loan-due-day" value="">
+            <input type="hidden" id="loan-guarantee" value="">
+
+            <div class="form-row-2">
+              <div class="form-group">
+                <label class="form-label" for="loan-frequency">Modalidad de Cobro</label>
+                <select id="loan-frequency" class="form-select" style="font-weight: 600;">
+                  <option value="daily" selected>Diario (Lunes a Sábado)</option>
+                  <option value="daily_all">Diario (Todos los Días)</option>
+                  <option value="weekly">Semanal</option>
+                  <option value="biweekly">Quincenal</option>
+                  <option value="monthly">Mensual</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="loan-total-installments">Cantidad de Cuotas *</label>
+                <input type="number" id="loan-total-installments" class="form-input" min="1" max="360" value="24" required>
+              </div>
+            </div>
+
+            <div class="form-row-2">
+              <div class="form-group">
+                <label class="form-label" for="loan-installment-amount">Monto por Cuota</label>
+                <input type="number" id="loan-installment-amount" class="form-input" step="0.01" min="0.01" placeholder="0.00" style="color: var(--text-emerald); font-weight: 700; font-size: 1.05rem; font-family: var(--font-heading);">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="loan-start-date">Fecha del Préstamo *</label>
+                <input type="date" id="loan-start-date" class="form-input" required>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <label class="form-label" for="loan-paid-installments" style="margin-bottom: 0;">Cuotas ya Pagadas</label>
+                <div style="display: flex; gap: 4px;">
+                  <button type="button" class="btn btn-secondary btn-sm" style="padding: 1px 6px; font-size: 0.68rem;" onclick="LoansModule.setZeroPaidInModal()">0</button>
+                  <button type="button" class="btn btn-emerald btn-sm" style="padding: 1px 8px; font-size: 0.68rem; font-weight: 700;" onclick="LoansModule.setFullPaidInModal()">Total</button>
+                </div>
+              </div>
+              <input type="number" id="loan-paid-installments" class="form-input" min="0" value="0">
+            </div>
+          </div>
+
+          <!-- Notes -->
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="loan-notes">Notas (Opcional)</label>
+            <textarea id="loan-notes" class="form-textarea" rows="2" placeholder="Observaciones..."></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close-modal="modal-loan">Cerrar</button>
+          <button type="submit" class="btn btn-aqua-glow">
+            <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" d="M5 13l4 4L19 7"/></svg>
+            <span>Guardar Préstamo</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ===================================================================
+       MODAL 2.1: COBRO SIMPLE Y BÁSICO (CUOTA vs SOLO INTERÉS)
+       =================================================================== -->
+  <div class="modal-backdrop" id="modal-quick-pay">
+    <div class="modal-dialog" style="max-width: 460px;">
+      <div class="modal-sheet-grabber"></div>
+      <div class="modal-header">
+        <h3 id="quick-pay-title">Registrar Cobro</h3>
+        <button class="modal-close-btn" data-close-modal="modal-quick-pay" type="button">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <span>Cerrar</span>
+        </button>
+      </div>
+      <form id="quick-pay-form">
+        <div class="modal-body">
+          <input type="hidden" id="quick-pay-loan-id">
+          <input type="hidden" id="quick-pay-mode" value="INSTALLMENT">
+
+          <!-- Selector Básico: Cuota vs Solo Interés -->
+          <div class="form-group">
+            <label class="form-label">¿Qué está pagando el deudor?</label>
+            <div class="payment-mode-selector">
+              <button type="button" class="pay-mode-pill active" id="btn-mode-installment" onclick="LoansModule.setQuickPayMode('INSTALLMENT')">
+                <span class="mode-icon">
+                  <svg width="16" height="16" fill="none" stroke="var(--text-emerald)" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                </span>
+                <div class="mode-text">
+                  <strong>Pago de Cuota</strong>
+                  <small>Descuenta su deuda</small>
+                </div>
+              </button>
+              <button type="button" class="pay-mode-pill mode-interest" id="btn-mode-interest-only" onclick="LoansModule.setQuickPayMode('INTEREST_ONLY')">
+                <span class="mode-icon">
+                  <svg width="16" height="16" fill="none" stroke="var(--text-amber)" stroke-width="2" viewBox="0 0 24 24"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
+                </span>
+                <div class="mode-text">
+                  <strong>Solo Interés</strong>
+                  <small>No descuenta su deuda</small>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Resumen Básico del Deudor -->
+          <div class="quick-pay-info-card" id="quick-pay-info-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <strong id="quick-pay-client-name" style="font-size: 1rem; color: var(--text-primary);">---</strong>
+              <span id="quick-pay-mode-badge" class="status-badge paid">Pago de Cuota</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 6px; border-top: 1px solid var(--border-subtle);">
+              <span id="quick-pay-cuota-label" style="font-size: 0.78rem; color: var(--text-secondary);">Cuota #1</span>
+              <strong id="quick-pay-amount-display" style="font-family: var(--font-heading); font-size: 1.15rem; color: var(--text-emerald);">S/ 0.00</strong>
+            </div>
+            <div id="quick-pay-impact-preview" style="margin-top: 6px; font-size: 0.74rem; color: var(--text-secondary);"></div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="quick-pay-amount" id="quick-pay-amount-label">Monto a Cobrar *</label>
+            <input type="number" id="quick-pay-amount" class="form-input" step="0.01" min="0.01" style="font-size: 1.2rem; font-weight: 700; font-family: var(--font-heading);" required>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label" for="quick-pay-method">Método de Cobro</label>
+              <select id="quick-pay-method" class="form-select" style="font-weight: 600;">
+                <option value="Efectivo" selected>Efectivo</option>
+                <option value="Yape">Yape</option>
+                <option value="Plin">Plin</option>
+                <option value="Transferencia BCP">BCP</option>
+                <option value="Transferencia BBVA">BBVA</option>
+                <option value="Transferencia Interbank">Interbank</option>
+                <option value="Otro">Otro medio</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="quick-pay-date">Fecha del Cobro</label>
+              <input type="date" id="quick-pay-date" class="form-input" required>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="quick-pay-notes">Nota (Opcional)</label>
+            <input type="text" id="quick-pay-notes" class="form-input" placeholder="Ej. Pagó puntual...">
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close-modal="modal-quick-pay">Cerrar</button>
+          <button type="submit" class="btn btn-aqua-glow" id="quick-pay-submit-btn">
+            <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" d="M5 13l4 4L19 7"/></svg>
+            <span>Confirmar Cobro</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ===================================================================
+       MODAL 2.2: CRONOGRAMA COMPLETO DE PAGOS
+       =================================================================== -->
+  <div class="modal-backdrop" id="modal-schedule">
+    <div class="modal-dialog" style="max-width: 700px;">
+      <div class="modal-sheet-grabber"></div>
+      <div class="modal-header">
+        <h3 id="schedule-modal-title">Cronograma de Pagos</h3>
+        <button class="modal-close-btn" data-close-modal="modal-schedule" type="button">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <span>Cerrar</span>
+        </button>
+      </div>
+      <div class="modal-body" style="max-height: 75vh; overflow-y: auto;">
+        <!-- Loan Summary Box -->
+        <div id="schedule-summary-box" style="margin-bottom: 16px;"></div>
+
+        <!-- Schedule Table -->
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>N° Cuota</th>
+                <th>Fecha Vencimiento</th>
+                <th>Monto Cuota</th>
+                <th>Estado</th>
+                <th style="text-align: right;">Acción</th>
+              </tr>
+            </thead>
+            <tbody id="schedule-table-body">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="window.print()">
+          <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H9v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+          <span>Imprimir</span>
+        </button>
+        <button type="button" class="btn btn-secondary" data-close-modal="modal-schedule">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ===================================================================
+       MODAL 2.3: COMPROBANTE / VOUCHER DE PAGO DIGITAL (TÉRMICO)
+       =================================================================== -->
+  <div class="modal-backdrop" id="modal-receipt">
+    <div class="modal-dialog" style="max-width: 440px;">
+      <div class="modal-sheet-grabber"></div>
+      <div class="modal-header">
+        <h3>Comprobante Digital</h3>
+        <button class="modal-close-btn" data-close-modal="modal-receipt" type="button">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <span>Cerrar</span>
+        </button>
+      </div>
+      <div class="modal-body" style="padding: 16px 12px; background: rgba(0,0,0,0.25);">
+        <!-- Thermal Ticket -->
+        <div class="receipt-paper" id="receipt-paper-content">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+      <div class="modal-footer" style="flex-wrap: wrap; gap: 8px;">
+        <button type="button" class="btn btn-whatsapp" id="btn-receipt-whatsapp">
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86.173.086.275.071.376-.043.101-.116.433-.506.549-.68.116-.173.231-.145.39-.086s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.1.824zm-3.423-10.416c-4.401 0-7.98 3.579-7.98 7.98 0 1.41.371 2.76 1.03 3.961l-1.095 4.003 4.109-1.077c1.161.634 2.474.993 3.936.993 4.402 0 7.98-3.579 7.98-7.98 0-4.402-3.578-7.98-7.98-7.98z"/></svg>
+          <span>Enviar por WhatsApp</span>
+        </button>
+        <button type="button" class="btn btn-secondary" onclick="window.print()">
+          <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H9v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+          <span>Imprimir Ticket</span>
+        </button>
+        <button type="button" class="btn btn-secondary" data-close-modal="modal-receipt">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ===================================================================
+       MODAL 3: REGISTRAR ABONO PARCIAL O LIQUIDACIÓN
+       =================================================================== -->
+  <div class="modal-backdrop" id="modal-amortize">
+    <div class="modal-dialog">
+      <div class="modal-sheet-grabber"></div>
+      <div class="modal-header">
+        <h3 id="amortize-modal-title">Registrar Abono o Pago Libre</h3>
+        <button class="modal-close-btn" data-close-modal="modal-amortize" type="button">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <span>Cerrar</span>
+        </button>
+      </div>
+      <form id="amortize-form">
+        <div class="modal-body">
+          <input type="hidden" id="amortize-loan-id">
+
+          <!-- Loan Info Strip -->
+          <div class="modal-glass-section" style="margin-bottom: 10px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px; align-items: center;">
+              <span style="font-size: 0.78rem; color: var(--text-muted);">Deudor:</span>
+              <strong id="amortize-entity-name" style="color: var(--text-primary); font-size: 0.95rem;">---</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px; align-items: center;">
+              <span style="font-size: 0.78rem; color: var(--text-muted);">Saldo Pendiente por Cobrar:</span>
+              <strong id="amortize-current-balance" style="color: var(--accent-aqua); font-size: 1.1rem; font-family: var(--font-heading);">S/ 0.00</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 0.76rem; color: var(--text-muted);">Cuota regular pactada:</span>
+              <span id="amortize-cuota-val" style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 600;">S/ 0.00</span>
+            </div>
+          </div>
+
+          <!-- Tipo de Abono -->
+          <div class="form-group">
+            <label class="form-label" for="amortize-payment-type">Destino del Pago</label>
+            <select id="amortize-payment-type" class="form-select" style="font-weight: 600;">
+              <option value="PARTIAL_AMORTIZATION" selected>Abono a Deuda / Cuotas (Descuenta del saldo)</option>
+              <option value="INTEREST_ONLY">Pago de Solo Intereses (No descuenta capital ni cuotas)</option>
+            </select>
+          </div>
+
+          <!-- Amount to Amortize -->
+          <div class="form-group">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <label class="form-label" for="amortize-amount" style="font-weight: 700; margin-bottom: 4px;">Monto Cobrado / Abonado *</label>
+            </div>
+            <input type="number" id="amortize-amount" class="form-input" step="0.01" min="0.01" placeholder="0.00" style="font-size: 1.25rem; font-weight: 700; font-family: var(--font-heading); padding: 10px 14px;" required>
+            
+            <!-- Quick preset buttons -->
+            <div style="display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap;">
+              <button type="button" class="btn btn-secondary btn-sm" style="font-size: 0.72rem;" id="amortize-preset-half">50% de Cuota</button>
+              <button type="button" class="btn btn-secondary btn-sm" style="font-size: 0.72rem;" id="amortize-preset-full">1 Cuota</button>
+              <button type="button" class="btn btn-interest-glass btn-sm" style="font-size: 0.72rem;" id="amortize-preset-interest">Solo Interés</button>
+              <button type="button" class="btn btn-emerald btn-sm" style="font-size: 0.72rem; font-weight: 700;" id="amortize-preset-total">Liquidar Todo</button>
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <!-- Method -->
+            <div class="form-group">
+              <label class="form-label" for="amortize-method">Método de Cobro</label>
+              <select id="amortize-method" class="form-select">
+                <option value="Efectivo" selected>Efectivo</option>
+                <option value="Yape">Yape</option>
+                <option value="Plin">Plin</option>
+                <option value="Transferencia BCP">Transferencia</option>
+              </select>
+            </div>
+
+            <!-- Date -->
+            <div class="form-group">
+              <label class="form-label" for="amortize-date">Fecha del Cobro *</label>
+              <input type="date" id="amortize-date" class="form-input" required>
+            </div>
+          </div>
+
+          <!-- Concept / Note -->
+          <div class="form-group">
+            <label class="form-label" for="amortize-notes">Detalle o Motivo del Cobro (Opcional)</label>
+            <input type="text" id="amortize-notes" class="form-input" placeholder="Ej. Abono parcial, pago de solo intereses...">
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close-modal="modal-amortize">Cerrar</button>
+          <button type="submit" class="btn btn-aqua-glow">
+            <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" d="M5 13l4 4L19 7"/></svg>
+            <span>Registrar Cobro</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ===================================================================
+       MODAL 4: HISTORIAL DE COBROS Y PAGOS DEL CLIENTE
+       =================================================================== -->
+  <div class="modal-backdrop" id="modal-loan-history">
+    <div class="modal-dialog" style="max-width: 580px;">
+      <div class="modal-sheet-grabber"></div>
+      <div class="modal-header">
+        <h3 id="history-modal-title">Historial de Cobros al Deudor</h3>
+        <button class="modal-close-btn" data-close-modal="modal-loan-history" type="button">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <span>Cerrar</span>
+        </button>
+      </div>
+      <div class="modal-body" style="padding-top: 14px;">
+        <div id="history-modal-content">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-close-modal="modal-loan-history">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================
+       MODAL 5: ALERTAS PUSH (MÓVIL Y PC)
+       =================================================================== -->
+  <div class="modal-backdrop" id="modal-notifications">
+    <div class="modal-dialog" style="max-width: 440px;">
+      <div class="modal-sheet-grabber"></div>
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <svg width="18" height="18" fill="none" stroke="var(--accent-aqua)" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <h3>Alertas Push</h3>
+        </div>
+        <button class="modal-close-btn" data-close-modal="modal-notifications" type="button">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <span>Cerrar</span>
+        </button>
+      </div>
+      <div class="modal-body" style="padding: 16px;">
+        <div id="notif-status-box">
+          <!-- Rendered dynamically -->
+        </div>
+
+        <div id="notif-summary-box">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================
+       MODAL 6: DESCARGAR E INSTALAR APP ANDROID (APK / PWA NATIVA)
+       =================================================================== -->
+  <div class="modal-backdrop" id="modal-apk-install">
+    <div class="modal-dialog" style="max-width: 480px;">
+      <div class="modal-sheet-grabber"></div>
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 34px; height: 34px; border-radius: 9px; background: rgba(45, 212, 191, 0.2); border: 1px solid rgba(45, 212, 191, 0.4); display: flex; align-items: center; justify-content: center; color: #2dd4bf;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 17l6 6 6-6"/>
+              <path d="M12 3v18"/>
+              <rect x="5" y="11" width="14" height="10" rx="3" stroke-width="2"/>
+              <circle cx="9" cy="15" r="1" fill="currentColor"/>
+              <circle cx="15" cy="15" r="1" fill="currentColor"/>
+            </svg>
+          </div>
+          <div>
+            <h3 style="margin: 0; font-size: 1.05rem;">Instalar App en Android</h3>
+            <p style="margin: 0; font-size: 0.75rem; color: var(--text-secondary);">Experiencia nativa APK • Modo Claro y Oscuro • 24/7 Conectada</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" data-close-modal="modal-apk-install" type="button">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <span>Cerrar</span>
+        </button>
+      </div>
+      <div class="modal-body" style="padding: 18px 16px;">
+        <div style="padding: 14px; border-radius: var(--radius-md); background: rgba(45, 212, 191, 0.08); border: 1px solid rgba(45, 212, 191, 0.28); margin-bottom: 16px;">
+          <div style="display: flex; align-items: flex-start; gap: 10px;">
+            <svg width="20" height="20" fill="none" stroke="#2dd4bf" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <div style="font-size: 0.8rem; color: var(--text-primary); line-height: 1.45;">
+              <strong>App 100% Conectada y Autónoma:</strong> Al instalarla en tu teléfono Android, se abrirá sin barra de navegación del navegador, adaptará el color de la batería y la barra superior automáticamente a la app, y sincronizará en tiempo real con <strong>Cloudflare D1</strong>.
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px;">
+          <div style="display: flex; gap: 12px; align-items: center; padding: 10px 12px; background: var(--bg-primary); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+            <div style="width: 26px; height: 26px; border-radius: 50%; background: var(--accent-aqua); color: #042f2e; font-weight: 800; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">1</div>
+            <div style="font-size: 0.82rem; color: var(--text-primary);">
+              Presiona el botón verde <strong>"Instalar App Nativa"</strong> abajo.
+            </div>
+          </div>
+          <div style="display: flex; gap: 12px; align-items: center; padding: 10px 12px; background: var(--bg-primary); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+            <div style="width: 26px; height: 26px; border-radius: 50%; background: var(--accent-aqua); color: #042f2e; font-weight: 800; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">2</div>
+            <div style="font-size: 0.82rem; color: var(--text-primary);">
+              O toca los <strong>3 puntos (⋮)</strong> de Chrome y selecciona <strong>"Instalar aplicación"</strong> o <strong>"Agregar a la pantalla principal"</strong>.
+            </div>
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-aqua-glow" id="btn-modal-install-now" style="width: 100%; padding: 12px; justify-content: center; font-size: 0.95rem;" onclick="PWAController.triggerInstall()">
+          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.3" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          <span>Instalar App Nativa en Android</span>
+        </button>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-close-modal="modal-apk-install">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- JavaScript Modules -->
+  <script src="js/utils.js?v=2.3.3"></script>
+  <script src="js/storage.js?v=2.3.3"></script>
+  <script src="js/expenses.js?v=2.3.3"></script>
+  <script src="js/loans.js?v=2.3.3"></script>
+  <script src="js/converter.js?v=2.3.3"></script>
+  <script src="js/reports.js?v=2.3.3"></script>
+  <script src="js/notifications.js?v=2.3.3"></script>
+  <script src="js/app.js?v=2.3.3"></script>
+  <script src="js/pwa.js?v=2.3.3"></script>
+</body>
+
+</html>

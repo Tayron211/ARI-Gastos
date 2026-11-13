@@ -1,0 +1,12 @@
+# Dependencies & runtime caches
+node_modules/
+.wrangler/
+.assetsignore
+dist/
+build/
+
+# Logs & temp files
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
