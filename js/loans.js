@@ -1275,6 +1275,24 @@ const LoansModule = {
     if (id) {
       const index = loans.findIndex(x => x.id === id);
       if (index !== -1) {
+        const targetPaid = Math.min(totalInstallments, Math.max(0, paidInstallments));
+        const oldPaid = loans[index].paidInstallments || 0;
+        let updatedHistory = Array.isArray(loans[index].history) ? [...loans[index].history] : [];
+        if (targetPaid !== oldPaid || targetPaid === 0) {
+          const intOnly = updatedHistory.filter(h => h && h.type === 'INTEREST_ONLY');
+          updatedHistory = [...intOnly];
+          for (let i = 1; i <= targetPaid; i++) {
+            updatedHistory.push({
+              installmentNumber: `Cuota #${i}`,
+              date: startDate,
+              amount: installmentAmount,
+              type: 'INSTALLMENT',
+              method: 'Efectivo',
+              receiptCode: Utils.generateReceiptCode()
+            });
+          }
+        }
+
         loans[index] = {
           ...loans[index],
           entity: clientName,
@@ -1288,7 +1306,7 @@ const LoansModule = {
           totalAmount,
           frequency,
           totalInstallments,
-          paidInstallments: Math.min(totalInstallments, paidInstallments),
+          paidInstallments: targetPaid,
           installmentAmount,
           customInterestPayment,
           startDate,
@@ -1296,7 +1314,8 @@ const LoansModule = {
           dueDayOfMonth,
           guarantee,
           notes,
-          currency
+          currency,
+          history: updatedHistory
         };
         Utils.showToast(`Préstamo de "${clientName}" actualizado exitosamente`, 'success');
       }
@@ -2078,14 +2097,21 @@ const LoansModule = {
     const paidEl = document.getElementById('loan-paid-installments');
     if (totalEl && paidEl) {
       const tot = parseInt(totalEl.value, 10) || 12;
-      paidEl.value = tot;
+      paidEl.value = String(tot);
+      paidEl.dispatchEvent(new Event('input', { bubbles: true }));
+      paidEl.dispatchEvent(new Event('change', { bubbles: true }));
       Utils.showToast(`Marcado como Pago Total (${tot} de ${tot} cuotas)`, 'info');
     }
   },
 
   setZeroPaidInModal() {
     const paidEl = document.getElementById('loan-paid-installments');
-    if (paidEl) paidEl.value = 0;
+    if (paidEl) {
+      paidEl.value = '0';
+      paidEl.dispatchEvent(new Event('input', { bubbles: true }));
+      paidEl.dispatchEvent(new Event('change', { bubbles: true }));
+      Utils.showToast('Marcado como 0 cuotas pagadas', 'info');
+    }
   },
 
   undoPayInstallment(loanId) {

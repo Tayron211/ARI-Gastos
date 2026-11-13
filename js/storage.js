@@ -173,7 +173,7 @@ const Storage = {
     const amount = Number(item.amount);
     if (!Number.isFinite(amount) || amount < 0) return null;
 
-    const title = cleanText(item.title, 160);
+    const title = cleanText(item.title || item.concept, 160);
     if (!title) return null;
 
     return {
@@ -289,6 +289,15 @@ const Storage = {
       this.syncWithCloud();
       if (!this._onlineListenerBound) {
         window.addEventListener('online', () => this.syncWithCloud());
+        window.addEventListener('focus', () => this.syncWithCloud());
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') this.syncWithCloud();
+        });
+        setInterval(() => {
+          if (document.visibilityState === 'visible' && navigator.onLine) {
+            this.syncWithCloud();
+          }
+        }, 8000);
         this._onlineListenerBound = true;
       }
     } catch (e) {
@@ -540,14 +549,20 @@ const Storage = {
     clearTimeout(this._cloudSyncTimer);
     this._cloudSyncTimer = setTimeout(() => {
       this.pushToCloud();
-    }, 600);
+    }, 150);
   },
 
   async pushToCloud() {
     if (typeof navigator !== 'undefined' && !navigator.onLine) return;
     try {
-      const expenses = this.getExpenses();
-      const loans = this.getLoans();
+      const expenses = this.getExpenses().map(e => ({
+        ...e,
+        concept: e.title || e.concept
+      }));
+      const loans = this.getLoans().map(l => ({
+        ...l,
+        entity: l.clientName || l.entity
+      }));
       const res = await fetch('/api/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -584,16 +599,25 @@ const Storage = {
       let expensesChanged = false;
       cloudExpenses.forEach(ce => {
         const id = ce.id;
-        if (!this.getDeletedExpenseIds().has(id) && !localExpMap.has(id)) {
-          localExpMap.set(id, this.sanitizeExpense({
+        if (!this.getDeletedExpenseIds().has(id)) {
+          const sanitized = this.sanitizeExpense({
             ...ce,
-            title: ce.concept || ce.title
-          }));
-          expensesChanged = true;
+            title: ce.title || ce.concept
+          });
+          if (sanitized) {
+            const existing = localExpMap.get(id);
+            if (!existing || JSON.stringify(existing) !== JSON.stringify(sanitized)) {
+              localExpMap.set(id, sanitized);
+              expensesChanged = true;
+            }
+          }
         }
       });
       if (expensesChanged) {
         this.saveExpenses(Array.from(localExpMap.values()), false);
+        if (typeof ExpensesModule !== 'undefined' && ExpensesModule.render) {
+          ExpensesModule.render();
+        }
       }
 
       // Merge cloud loans non-destructively
@@ -602,13 +626,32 @@ const Storage = {
       let loansChanged = false;
       cloudLoans.forEach(cl => {
         const id = cl.id;
-        if (!this.getDeletedLoanIds().has(id) && !localLoanMap.has(id)) {
-          localLoanMap.set(id, this.sanitizeLoan(cl));
-          loansChanged = true;
+        if (!this.getDeletedLoanIds().has(id)) {
+          const sanitized = this.sanitizeLoan({
+            ...cl,
+            clientName: cl.clientName || cl.entity,
+            entity: cl.entity || cl.clientName
+          });
+          if (sanitized) {
+            const existing = localLoanMap.get(id);
+            if (!existing || JSON.stringify(existing) !== JSON.stringify(sanitized)) {
+              localLoanMap.set(id, sanitized);
+              loansChanged = true;
+            }
+          }
         }
       });
       if (loansChanged) {
         this.saveLoans(Array.from(localLoanMap.values()), false);
+        if (typeof LoansModule !== 'undefined' && LoansModule.render) {
+          LoansModule.render();
+        }
+      }
+
+      if (expensesChanged || loansChanged) {
+        if (typeof App !== 'undefined' && App.refreshDashboard) {
+          App.refreshDashboard();
+        }
       }
     } catch (e) {
       // Local vaults keep running smoothly

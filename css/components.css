@@ -168,28 +168,38 @@
   border-color: rgba(244, 63, 94, 0.45);
 }
 
-/* Explicit Modal Close Button */
+/* Explicit Modal Close Button - Pure "X" Action */
 .modal-close-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  padding: 6px 12px;
-  border-radius: 7px;
-  background-color: var(--bg-primary);
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  padding: 0;
+  border-radius: 8px;
+  background-color: var(--bg-tertiary);
   border: 1px solid var(--border-color);
   color: var(--text-secondary);
-  font-family: var(--font-body);
-  font-size: 0.76rem;
-  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
 }
 
 .modal-close-btn:hover {
   background-color: rgba(244, 63, 94, 0.15);
   border-color: rgba(244, 63, 94, 0.4);
   color: var(--text-rose);
+  transform: scale(1.06);
+}
+
+.modal-close-btn svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2.5;
+}
+
+.modal-close-btn span {
+  display: none !important;
 }
 
 /* ==========================================================================

@@ -17,7 +17,14 @@ export async function onRequestGet(context) {
 
     const [expensesRes, loansRes] = await db.batch([expensesStmt, loansStmt]);
 
-    // Parse loans history JSON
+    // Parse expenses with fallback for title/concept
+    const expenses = (expensesRes.results || []).map(e => ({
+      ...e,
+      title: e.title || e.concept,
+      concept: e.concept || e.title
+    }));
+
+    // Parse loans history JSON with fallback for entity/clientName
     const loans = (loansRes.results || []).map(l => {
       let history = [];
       try {
@@ -25,13 +32,18 @@ export async function onRequestGet(context) {
       } catch (e) {
         history = [];
       }
-      return { ...l, history };
+      return {
+        ...l,
+        clientName: l.clientName || l.entity,
+        entity: l.entity || l.clientName,
+        history
+      };
     });
 
     return new Response(JSON.stringify({
       success: true,
       timestamp: Date.now(),
-      expenses: expensesRes.results || [],
+      expenses: expenses,
       loans: loans
     }), {
       status: 200,
@@ -65,7 +77,8 @@ export async function onRequestPost(context) {
 
     // Batch upsert expenses
     for (const exp of expenses) {
-      if (!exp.id || !exp.concept) continue;
+      const concept = exp.title || exp.concept;
+      if (!exp.id || !concept) continue;
       statements.push(
         db.prepare(`
           INSERT INTO expenses (id, concept, amount, currency, category, paymentMethod, date, notes, timestamp, updatedAt)
@@ -81,7 +94,7 @@ export async function onRequestPost(context) {
             updatedAt = excluded.updatedAt
         `).bind(
           exp.id,
-          exp.concept || exp.title,
+          concept,
           Number(exp.amount) || 0,
           exp.currency || 'PEN',
           exp.category || 'Otros',
@@ -96,7 +109,8 @@ export async function onRequestPost(context) {
 
     // Batch upsert loans
     for (const l of loans) {
-      if (!l.id || !l.entity) continue;
+      const entity = l.clientName || l.entity;
+      if (!l.id || !entity) continue;
       const historyStr = JSON.stringify(l.history || []);
       statements.push(
         db.prepare(`

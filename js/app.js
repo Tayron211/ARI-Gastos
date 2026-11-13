@@ -73,17 +73,15 @@ const App = {
       btnDown.innerHTML = `<svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>`;
 
       const stepValue = (dir) => {
-        try {
-          if (dir > 0) input.stepUp();
-          else input.stepDown();
-        } catch (e) {
-          const current = parseFloat(input.value) || 0;
-          const stepAttr = parseFloat(input.step) || 1;
-          const minAttr = input.min !== '' ? parseFloat(input.min) : null;
-          let nextVal = current + (dir * stepAttr);
-          if (minAttr !== null && nextVal < minAttr) nextVal = minAttr;
-          input.value = Number.isInteger(stepAttr) ? Math.round(nextVal) : nextVal.toFixed(2);
-        }
+        let current = parseFloat(input.value);
+        if (isNaN(current)) current = 0;
+        const stepAttr = parseFloat(input.step) || 1;
+        const minAttr = input.min !== '' ? parseFloat(input.min) : null;
+        const maxAttr = input.max !== '' ? parseFloat(input.max) : null;
+        let nextVal = current + (dir * stepAttr);
+        if (minAttr !== null && nextVal < minAttr) nextVal = minAttr;
+        if (maxAttr !== null && nextVal > maxAttr) nextVal = maxAttr;
+        input.value = Number.isInteger(stepAttr) ? String(Math.round(nextVal)) : nextVal.toFixed(2);
         input.dispatchEvent(new Event('input', { bubbles: true }));
         input.dispatchEvent(new Event('change', { bubbles: true }));
       };
