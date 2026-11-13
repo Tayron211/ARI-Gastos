@@ -1,13 +1,8 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "ari-gastos",
+  "pages_build_output_dir": ".",
   "compatibility_date": "2026-11-10",
-  "observability": {
-    "enabled": true
-  },
-  "assets": {
-    "directory": "."
-  },
   "d1_databases": [
     {
       "binding": "DB",
