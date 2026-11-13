@@ -26,6 +26,9 @@ const NotificationsController = {
   },
 
   checkSupport() {
+    if (typeof window.AndroidApp !== 'undefined') {
+      return true;
+    }
     if (!('Notification' in window)) {
       return false;
     }
@@ -34,16 +37,42 @@ const NotificationsController = {
   },
 
   isGranted() {
+    if (typeof window.AndroidApp !== 'undefined' && window.AndroidApp.isNotificationEnabled) {
+      return window.AndroidApp.isNotificationEnabled();
+    }
     return 'Notification' in window && Notification.permission === 'granted';
   },
 
   async requestPermission() {
+    // 1. Native Android APK Bridge
+    if (typeof window.AndroidApp !== 'undefined' && window.AndroidApp.requestNotificationPermission) {
+      try {
+        window.AndroidApp.requestNotificationPermission();
+        this.permission = 'granted';
+        this.updateUI();
+        this.updateModalContent();
+        Utils.showToast('¡Notificaciones Push nativas habilitadas en tu teléfono!', 'success');
+        setTimeout(() => {
+          this.sendPushNotification({
+            title: 'Ari-Control • Alertas de Cobro Activas',
+            body: 'Te recordaremos las fechas y montos exactos a cobrar a tus deudores.',
+            tag: 'welcome-apk-notification',
+            url: './index.html?tab=loans'
+          });
+          this.checkDailyAlerts(true);
+        }, 1200);
+        return true;
+      } catch (err) {
+        console.warn('[Notificaciones APK] Error al solicitar permisos:', err);
+      }
+    }
+
     if (!('Notification' in window)) {
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
       if (isIOS) {
         Utils.showToast('En iPhone/iPad: agrega la app al inicio para activar alertas Push.', 'info');
       } else {
-        Utils.showToast('Tu navegador no admite notificaciones Push.', 'warning');
+        Utils.showToast('Tu dispositivo no admite notificaciones Push.', 'warning');
       }
       return false;
     }
@@ -64,7 +93,7 @@ const NotificationsController = {
       if (perm === 'granted') {
         Utils.showToast('Alertas Push activadas en este dispositivo', 'success');
         await this.sendPushNotification({
-          title: 'Ari-Control • Alertas Activas',
+          title: 'Ari-Control • Alertas de Cobro Activas',
           body: 'Recibirás avisos de cobros y pagos del día en tu móvil o PC.',
           tag: 'welcome-notification',
           url: './index.html?tab=loans'
@@ -72,7 +101,7 @@ const NotificationsController = {
         this.checkDailyAlerts(true);
         return true;
       } else if (perm === 'denied') {
-        Utils.showToast('Permiso bloqueado. Habilítalo en los ajustes del navegador.', 'warning');
+        Utils.showToast('Permiso bloqueado. Habilítalo en los ajustes del dispositivo.', 'warning');
         return false;
       }
     } catch (err) {
@@ -270,30 +299,44 @@ const NotificationsController = {
 
     let hasAlerts = false;
 
+    // 1. Recordatorios específicos por cada deudor a cobrar hoy
     if (summary.cobrosCount > 0) {
-      const clientNames = summary.cobrosToday.map(c => c.clientName).slice(0, 3).join(', ');
-      this.sendPushNotification({
-        title: `Cobros de Hoy (${summary.cobrosCount})`,
-        body: `Por cobrar: S/ ${summary.totalCobrosMonto.toFixed(2)} (${clientNames})`,
-        tag: `cobros-${todayStr}`,
-        url: './index.html?tab=loans'
+      summary.cobrosToday.forEach((c, idx) => {
+        const monto = c.nextCuota ? c.nextCuota.amount : c.installmentAmount;
+        const cuotaText = c.nextCuota ? `Cuota #${c.nextCuota.installmentNumber}` : 'Cuota';
+        setTimeout(() => {
+          this.sendPushNotification({
+            title: `🔔 Toca cobrar hoy: ${c.clientName}`,
+            body: `Monto: S/ ${monto.toFixed(2)} (${cuotaText}). Préstamo: S/ ${c.principalAmount.toFixed(2)}.`,
+            tag: `cobro-${c.id}-${todayStr}`,
+            url: './index.html?tab=loans'
+          });
+        }, idx * 600);
       });
       hasAlerts = true;
     }
 
+    // 2. Alertas específicas por cada deudor con cuota vencida (Mora)
     if (summary.overdueCount > 0) {
-      setTimeout(() => {
-        this.sendPushNotification({
-          title: `Alerta de Mora (${summary.overdueCount})`,
-          body: `Clientes con cuotas vencidas pendientes de cobro.`,
-          tag: `mora-${todayStr}`,
-          url: './index.html?tab=loans'
-        });
-      }, 1200);
+      summary.overdues.forEach((c, idx) => {
+        const monto = c.nextCuota ? c.nextCuota.amount : c.installmentAmount;
+        const cuotaText = c.nextCuota ? `Cuota #${c.nextCuota.installmentNumber}` : 'Cuota';
+        const delay = (summary.cobrosCount * 600) + (idx * 600) + 800;
+        setTimeout(() => {
+          this.sendPushNotification({
+            title: `⚠️ Deudor en Mora: ${c.clientName}`,
+            body: `Tiene ${c.daysOverdue} días de atraso en ${cuotaText} por S/ ${monto.toFixed(2)}.`,
+            tag: `mora-${c.id}-${todayStr}`,
+            url: './index.html?tab=loans'
+          });
+        }, delay);
+      });
       hasAlerts = true;
     }
 
+    // 3. Resumen de gastos del día si los hay
     if (summary.pagosCount > 0) {
+      const delay = (summary.cobrosCount * 600) + (summary.overdueCount * 600) + 1600;
       setTimeout(() => {
         this.sendPushNotification({
           title: `Gastos de Hoy (${summary.pagosCount})`,
@@ -301,7 +344,7 @@ const NotificationsController = {
           tag: `pagos-${todayStr}`,
           url: './index.html?tab=expenses'
         });
-      }, 2400);
+      }, delay);
       hasAlerts = true;
     }
 
@@ -313,7 +356,7 @@ const NotificationsController = {
   },
 
   /**
-   * Unified Push Notification sender for Mobile (ServiceWorker registration) & Desktop PC
+   * Unified Push Notification sender for Android Native APK, ServiceWorker & Desktop PC
    */
   async sendPushNotification(options) {
     const title = options.title || 'Ari-Control';
@@ -322,6 +365,16 @@ const NotificationsController = {
     const icon = './icons/icon-192.png';
     const badge = './icons/icon-192.png';
     const url = options.url || './index.html?tab=loans';
+
+    // 0. Android Native APK Bridge: Highest priority for native background & sound
+    if (typeof window.AndroidApp !== 'undefined' && window.AndroidApp.showNotification) {
+      try {
+        window.AndroidApp.showNotification(title, body, tag);
+        return true;
+      } catch (apkErr) {
+        console.warn('[Push APK] Fallback desde bridge:', apkErr);
+      }
+    }
 
     const notifOptions = {
       body,
@@ -389,12 +442,12 @@ const NotificationsController = {
     }
 
     await this.sendPushNotification({
-      title: 'Ari-Control • Alerta de Prueba',
-      body: 'Las notificaciones Push funcionan correctamente en tu dispositivo.',
-      tag: 'test-' + Date.now(),
+      title: '🔔 Toca cobrar hoy: Lizy',
+      body: 'Recordatorio: Cuota #2 por S/ 80.00 vence hoy. Toca para registrar el cobro.',
+      tag: 'test-cobro-' + Date.now(),
       url: './index.html?tab=loans'
     });
-    Utils.showToast('Alerta Push enviada a tu dispositivo', 'success');
+    Utils.showToast('Alerta de cobro de prueba enviada', 'success');
   }
 };
 
