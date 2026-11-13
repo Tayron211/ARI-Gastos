@@ -41,9 +41,21 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
+  <!-- Immediate Theme Pre-loader (Prevents theme flash/flip across views) -->
+  <script>
+    (function() {
+      var savedTheme = localStorage.getItem('finanflow_theme');
+      if (!savedTheme) {
+        savedTheme = (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark';
+        try { localStorage.setItem('finanflow_theme', savedTheme); } catch(e){}
+      }
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+  </script>
+
   <!-- CSS Stylesheets -->
-  <link rel="stylesheet" href="css/main.css?v=2.3.3">
-  <link rel="stylesheet" href="css/components.css?v=2.3.3">
+  <link rel="stylesheet" href="css/main.css?v=2.3.4">
+  <link rel="stylesheet" href="css/components.css?v=2.3.4">
 </head>
 
 <body>
@@ -119,39 +131,9 @@
             <span>Divisas</span>
           </a>
         </li>
-        <li>
-          <a href="reportes.html" class="nav-item-btn" data-tab="reports">
-            <div class="nav-icon-glass">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-            </div>
-            <span>Reportes</span>
-          </a>
-        </li>
       </ul>
 
       <div class="sidebar-footer">
-        <!-- Prominent Android APK / PWA Native App Download Button -->
-        <div class="sidebar-apk-container">
-          <button class="btn-download-apk" id="btn-download-apk" type="button" aria-label="Descargar e Instalar App Android">
-            <div class="apk-icon-circle">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M4 17l6 6 6-6"/>
-                <path d="M12 3v18"/>
-                <rect x="5" y="11" width="14" height="10" rx="3" stroke-width="2"/>
-                <circle cx="9" cy="15" r="1" fill="currentColor"/>
-                <circle cx="15" cy="15" r="1" fill="currentColor"/>
-              </svg>
-            </div>
-            <div class="apk-info">
-              <span class="apk-title">Descargar APK / App</span>
-              <span class="apk-desc">Instalar nativa en Android</span>
-            </div>
-          </button>
-        </div>
-
         <div class="sidebar-icon-bar">
           <button class="sidebar-icon-action" id="theme-toggle-btn" title="Cambiar Modo Claro / Oscuro" aria-label="Cambiar Modo Claro / Oscuro" type="button">
             <svg class="icon-sun" width="17" height="17" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -170,8 +152,8 @@
             </svg>
           </button>
 
-          <!-- PWA Install Icon Button -->
-          <button class="sidebar-icon-action pwa-install-btn" id="pwa-install-btn" title="Instalar App en Móvil o PC" aria-label="Instalar App" type="button">
+          <!-- PWA Native APK Download / Install Action Button -->
+          <button class="sidebar-icon-action pwa-install-btn" id="pwa-install-btn" title="Descargar APK / Instalar App Nativa Android" aria-label="Descargar APK Android" type="button">
             <svg width="17" height="17" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <rect x="5" y="2" width="14" height="20" rx="2" ry="2" stroke-width="2"/>
               <line x1="12" y1="18" x2="12.01" y2="18" stroke-width="2" stroke-linecap="round"/>

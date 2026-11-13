@@ -642,10 +642,48 @@ const App = {
   bindNavigation() {
     const navButtons = document.querySelectorAll('.nav-item-btn[data-tab], .dock-tab-btn[data-tab]');
     navButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', (e) => {
+        if (e) e.preventDefault();
         const tab = btn.dataset.tab;
+        if (!tab) return;
         this.switchTab(tab);
+
+        // Update URL cleanly without reloading page or flashing theme
+        const urlMap = {
+          dashboard: 'index.html',
+          loans: 'prestamos.html',
+          expenses: 'gastos.html',
+          converter: 'conversor.html',
+          reports: 'reportes.html'
+        };
+        const targetUrl = urlMap[tab] || 'index.html';
+        if (window.history && window.history.pushState) {
+          try {
+            window.history.pushState({ tab }, '', targetUrl);
+          } catch(err) {}
+        }
+
+        // Close mobile sidebar if open
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        if (sidebar && sidebar.classList.contains('open')) {
+          sidebar.classList.remove('open');
+          if (overlay) overlay.classList.remove('open');
+        }
       });
+    });
+
+    // Handle browser back / forward without full reload
+    window.addEventListener('popstate', (e) => {
+      if (e.state && e.state.tab) {
+        this.switchTab(e.state.tab);
+      } else {
+        const path = (window.location.pathname || '').toLowerCase();
+        if (path.includes('prestamo')) this.switchTab('loans');
+        else if (path.includes('gasto')) this.switchTab('expenses');
+        else if (path.includes('convers')) this.switchTab('converter');
+        else this.switchTab('dashboard');
+      }
     });
 
     // Mobile sidebar toggle
@@ -1033,8 +1071,9 @@ const App = {
         }
       });
 
-      const savedTheme = localStorage.getItem('finanflow_theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+      const savedTheme = document.documentElement.getAttribute('data-theme') || localStorage.getItem('finanflow_theme') || 'dark';
       document.documentElement.setAttribute('data-theme', savedTheme);
+      try { localStorage.setItem('finanflow_theme', savedTheme); } catch(e){}
       updateBtnState(savedTheme);
       this.updateAndroidStatusBar(savedTheme);
 

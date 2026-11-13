@@ -91,10 +91,9 @@ const PWAController = {
     window.addEventListener('appinstalled', () => {
       this.deferredPrompt = null;
       this.isInstalled = true;
-      if (installBtn) installBtn.style.display = 'none';
       if (installBanner) installBanner.style.display = 'none';
       if (typeof Utils !== 'undefined' && Utils.showToast) {
-        Utils.showToast('¡Ari-Gastos se instaló exitosamente como aplicación!', 'success');
+        Utils.showToast('¡Ari-Gastos se instaló exitosamente como aplicación nativa!', 'success');
       }
     });
   },

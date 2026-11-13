@@ -32,3 +32,4 @@ VALUES (
   1,
   '[{"installmentNumber":"Cuota #1","date":"2026-10-09","amount":80,"type":"INSTALLMENT","method":"Efectivo","receiptCode":"REC-261009-1001"},{"installmentNumber":"Solo Interés #1","date":"2026-11-12","amount":80,"type":"INTEREST_ONLY","extendSchedule":true,"method":"Efectivo","receiptCode":"REC-261112-1002","notes":"Pago de solo intereses #1"}]'
 );
+

@@ -43,3 +43,4 @@ CREATE TABLE IF NOT EXISTS loans (
 
 CREATE INDEX IF NOT EXISTS idx_expenses_date ON expenses(date);
 CREATE INDEX IF NOT EXISTS idx_loans_status ON loans(status);
+
