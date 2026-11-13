@@ -327,16 +327,16 @@ const ConverterModule = {
     if (statusDot && statusText) {
       if (isFallback) {
         statusDot.style.background = 'var(--accent-amber)';
-        statusText.textContent = `BCP (Referencial) · Dólar: S/ ${usdBuy} | Euro: S/ ${eurBuy}`;
+        statusText.textContent = 'En vivo (Respaldo)';
       } else {
         statusDot.style.background = 'var(--accent-emerald)';
-        statusText.textContent = `Banco de Crédito BCP · Dólar: S/ ${usdBuy} / ${usdSale} · Euro: S/ ${eurBuy} / ${eurSale}`;
+        statusText.textContent = 'En vivo';
       }
     }
   },
 
   /**
-   * Update topbar real-time ticker with authentic BCP logo and multi-currency values
+   * Update topbar real-time ticker with sleek compact BCP logo and clean buy/sell rates
    */
   updateLiveTickerUI() {
     const tickerText = document.getElementById('ticker-rates-text');
@@ -345,18 +345,14 @@ const ConverterModule = {
     const usdBuy = (this.usdRates && this.usdRates.compra) ? this.usdRates.compra.toFixed(3) : ((this.bcpRates && this.bcpRates.compra) ? this.bcpRates.compra.toFixed(3) : '3.525');
     const usdSale = (this.usdRates && this.usdRates.venta) ? this.usdRates.venta.toFixed(3) : ((this.bcpRates && this.bcpRates.venta) ? this.bcpRates.venta.toFixed(3) : '3.540');
 
-    const eurBuy = (this.eurRates && this.eurRates.compra) ? this.eurRates.compra.toFixed(3) : '3.820';
-    const eurSale = (this.eurRates && this.eurRates.venta) ? this.eurRates.venta.toFixed(3) : '3.960';
-
-    const eurToUsd = (this.crossRates && this.crossRates.eurToUsd) ? this.crossRates.eurToUsd.toFixed(4) : (this.getRate('EUR', 'USD')).toFixed(4);
+    const eurBuy = (this.eurRates && this.eurRates.compra) ? this.eurRates.compra.toFixed(3) : '3.843';
+    const eurSale = (this.eurRates && this.eurRates.venta) ? this.eurRates.venta.toFixed(3) : '3.989';
 
     tickerText.innerHTML = `
-      <span style="display:inline-flex; align-items:center; background:#ffffff; padding:2px 6px; border-radius:4px; vertical-align:middle; margin-right:6px; box-shadow:0 1px 2px rgba(0,0,0,0.12);">
-        <img src="./icons/bcp-logo.svg" alt="BCP" style="height:12px; width:auto; display:block;" />
+      <span style="display:inline-flex; align-items:center; background:#ffffff; padding:1px 4px; border-radius:3px; vertical-align:middle; margin-right:5px; box-shadow:0 1px 2px rgba(0,0,0,0.06);">
+        <img src="./icons/bcp-logo.svg" alt="BCP" style="height:9px; width:auto; display:block;" />
       </span>
-      <strong>$ Dólar:</strong> C S/ ${usdBuy} V S/ ${usdSale} &bull; 
-      <strong>€ Euro:</strong> C S/ ${eurBuy} V S/ ${eurSale} &bull; 
-      <strong>1 EUR =</strong> $${eurToUsd}
+      <strong>Dólar:</strong> C S/ ${usdBuy} &bull; V S/ ${usdSale} &nbsp;<span style="color:var(--border-color);">&bull;</span>&nbsp; <strong>Euro:</strong> C S/ ${eurBuy} &bull; V S/ ${eurSale}
     `;
   },
 
