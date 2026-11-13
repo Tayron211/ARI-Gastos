@@ -651,8 +651,7 @@ const App = {
           dashboard: 'index.html',
           loans: 'prestamos.html',
           expenses: 'gastos.html',
-          converter: 'conversor.html',
-          reports: 'reportes.html'
+          converter: 'conversor.html'
         };
         const targetUrl = urlMap[tab] || 'index.html';
         if (window.history && window.history.pushState) {
@@ -897,11 +896,17 @@ const App = {
   renderDashboardRecentLists() {
     const cur = this.currentCurrency;
 
-    // Recent expenses (only active currency)
+    // Recent expenses (sorted by date descending to always show latest real expenses)
     const recentExpContainer = document.getElementById('dash-recent-expenses');
     if (recentExpContainer) {
       const expenses = Storage.getExpenses()
         .filter(e => e.currency === cur)
+        .sort((a, b) => {
+          const tB = new Date(b.date || '').getTime() || 0;
+          const tA = new Date(a.date || '').getTime() || 0;
+          if (tB !== tA) return tB - tA;
+          return String(b.id || '').localeCompare(String(a.id || ''));
+        })
         .slice(0, 5);
 
       if (expenses.length === 0) {
@@ -940,8 +945,8 @@ const App = {
         urgentContainer.innerHTML = `<div style="padding: 16px; color: var(--accent-emerald); font-size: 0.85rem;">No tienes deudores pendientes en ${cur === 'PEN' ? 'Soles' : 'Euros'}.</div>`;
       } else {
         urgentContainer.innerHTML = pendingLoans.map(l => `
-          <div style="display: flex; align-items: center; justify-content: space-between; padding: 11px 0; border-bottom: 1px solid var(--border-subtle); flex-wrap: wrap; gap: 10px;">
-            <div style="min-width: 150px; flex: 1;">
+          <div class="dash-debtor-row">
+            <div class="dash-debtor-info">
               <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                 <span style="font-weight: 700; font-size: 0.88rem; color: var(--text-primary);">${LoansModule.escapeHTML(l.clientName)}</span>
                 ${l.interestOnlyCount > 0 ? `<span class="status-badge interest-only-badge" style="font-size: 0.65rem; padding: 2px 7px;">${l.interestOnlyCount}x Solo Int. (+${Utils.formatCurrency(l.interestOnlyPaid, l.currency)})</span>` : ''}
@@ -950,7 +955,7 @@ const App = {
                 <strong>${l.paidInstallments}/${l.totalInstallments}</strong> cuotas · Debe: <strong style="color: var(--accent-rose);">${Utils.formatCurrency(l.remainingAmount, l.currency)}</strong>
               </div>
             </div>
-            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+            <div class="dash-debtor-actions">
               <button class="btn btn-aqua-glow btn-sm" onclick="LoansModule.openQuickPayModal('${l.id}', 'INSTALLMENT')" title="Cobrar 1 cuota normal">
                 ${Utils.icon('check', 13)}
                 <span>Cuota</span>
@@ -959,8 +964,8 @@ const App = {
                 ${Utils.icon('percent', 13)}
                 <span>Solo Interés</span>
               </button>
-              <button class="btn btn-secondary btn-sm" onclick="LoansModule.openAmortizeModal('${l.id}')" title="Abonar monto libre">
-                ${Utils.icon('wallet', 13)}
+              <button class="btn btn-secondary btn-sm" onclick="LoansModule.openReceiptModalForLoan('${l.id}')" title="Comprobante">
+                ${Utils.icon('file', 13)}
               </button>
             </div>
           </div>

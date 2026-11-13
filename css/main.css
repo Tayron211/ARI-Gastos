@@ -806,37 +806,24 @@ a.nav-item-btn:hover {
   transform: translateY(-2px);
 }
 
-.stat-card.loans {
-  border-top-color: var(--accent-aqua);
-}
 .stat-card.loans .stat-card-icon {
   color: var(--text-aqua);
   background: rgba(45, 212, 191, 0.14);
   border-color: rgba(45, 212, 191, 0.32);
 }
 
-.stat-card.interest-only-kpi {
-  border-top-color: var(--accent-amber);
-  background: linear-gradient(180deg, rgba(245, 158, 11, 0.05) 0%, var(--card-bg) 100%);
-}
 .stat-card.interest-only-kpi .stat-card-icon {
   color: var(--text-amber);
   background: rgba(245, 158, 11, 0.15);
   border-color: rgba(245, 158, 11, 0.35);
 }
 
-.stat-card.paid {
-  border-top-color: var(--accent-emerald);
-}
 .stat-card.paid .stat-card-icon {
   color: var(--text-emerald);
   background: rgba(16, 185, 129, 0.14);
   border-color: rgba(16, 185, 129, 0.3);
 }
 
-.stat-card.expenses {
-  border-top-color: var(--accent-rose);
-}
 .stat-card.expenses .stat-card-icon {
   color: var(--text-rose);
   background: rgba(244, 63, 94, 0.14);
@@ -1215,5 +1202,62 @@ a.nav-item-btn:hover {
 
   .panel-title-group p {
     display: none;
+  }
+}
+
+.dash-debtor-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--border-subtle);
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.dash-debtor-info {
+  min-width: 140px;
+  flex: 1;
+}
+
+.dash-debtor-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 480px) {
+  .dash-debtor-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .dash-debtor-actions {
+    width: 100%;
+    display: flex;
+    justify-content: flex-start;
+    gap: 6px;
+  }
+  .dash-debtor-actions .btn {
+    flex: 1;
+    justify-content: center;
+  }
+  .cur-pill-btn span {
+    font-size: 0.72rem;
+  }
+  .liquid-hero-banner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .liquid-hero-banner .hero-actions {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+  }
+  .liquid-hero-banner .hero-actions .btn {
+    flex: 1;
+    justify-content: center;
   }
 }
