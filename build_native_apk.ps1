@@ -1,4 +1,4 @@
-﻿# Build Script for Native Android APK - ARI-Control with Push Notifications
+# Build Script for Native Android APK - ARI-Control with Push Notifications
 $ErrorActionPreference = "Stop"
 
 $SDK_DIR = "C:\Android"

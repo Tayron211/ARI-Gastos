@@ -44,6 +44,21 @@ const App = {
       else if (path.includes('report')) this.switchTab('reports');
       else this.refreshDashboard();
     }
+
+    // Dismiss Splash Screen smoothly after brief delay
+    this.dismissSplashScreen();
+  },
+
+  dismissSplashScreen() {
+    const splash = document.getElementById('app-splash-screen');
+    if (splash) {
+      setTimeout(() => {
+        splash.classList.add('fade-out');
+        setTimeout(() => {
+          if (splash.parentNode) splash.parentNode.removeChild(splash);
+        }, 450);
+      }, 550);
+    }
   },
 
   initCustomNumberSteppers() {

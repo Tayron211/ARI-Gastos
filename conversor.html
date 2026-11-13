@@ -60,6 +60,19 @@
 
 <body data-page="converter">
 
+  <!-- Elegant Minimalist Splash Screen -->
+  <div id="app-splash-screen" class="app-splash-screen" aria-hidden="true">
+    <div class="splash-content">
+      <div class="splash-logo-wrapper">
+        <img src="icons/icon-192.png" alt="Ari-Control" class="splash-logo" />
+      </div>
+      <h1 class="splash-title">Ari-Control</h1>
+      <div class="splash-loader-bar">
+        <div class="splash-loader-progress"></div>
+      </div>
+    </div>
+  </div>
+
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
   <div class="app-container">
@@ -774,11 +787,6 @@
               </div>
 
               <div class="panel-controls">
-                <div class="live-status-capsule">
-                  <span id="conv-status-dot"></span>
-                  <span id="conv-status-text">En tiempo real</span>
-                </div>
-
                 <button class="btn btn-secondary btn-sm" id="conv-refresh-btn" title="Actualizar cotizaciones" type="button">
                   <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -861,7 +869,7 @@
                     style="font-size: 1.3rem; font-weight: 800; font-family: var(--font-heading); padding: 13px 16px;">
                 </div>
 
-                <!-- From / Swap / To Selectors -->
+                <!-- From / To Selectors -->
                 <div class="converter-input-row">
                   <div class="currency-select-box">
                     <label class="form-label" for="conv-from">De (Moneda Origen)</label>
@@ -871,14 +879,6 @@
                       <option value="USD">USD - Dólar Estadounidense ($)</option>
                     </select>
                   </div>
-
-                  <button class="swap-btn-circular" id="conv-swap-btn" title="Intercambiar divisas" type="button">
-                    <svg id="conv-swap-icon" width="20" height="20" fill="none" stroke="currentColor"
-                      viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"
-                        d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                    </svg>
-                  </button>
 
                   <div class="currency-select-box">
                     <label class="form-label" for="conv-to">A (Moneda Destino)</label>

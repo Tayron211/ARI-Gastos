@@ -65,7 +65,7 @@ public class MainActivity extends Activity {
         webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         webView.setWebChromeClient(new WebChromeClient());
 
-        // Puente nativo para Notificaciones Push de cobros y sincronización de barras del sistema
+        // Puente nativo para Notificaciones Push de cobros y sincronizaciÃ³n de barras del sistema
         AndroidBridge bridge = new AndroidBridge(this);
         webView.addJavascriptInterface(bridge, "AndroidApp");
         webView.addJavascriptInterface(bridge, "AndroidBridge");
@@ -112,7 +112,7 @@ public class MainActivity extends Activity {
             }
         });
 
-        // Solicitar permisos de notificación si Android 13+
+        // Solicitar permisos de notificaciÃ³n si Android 13+
         if (Build.VERSION.SDK_INT >= 33) {
             if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
                 requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, REQ_POST_NOTIFICATIONS);
