@@ -35,13 +35,18 @@ public class MainActivity extends Activity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             Window window = getWindow();
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-            window.setStatusBarColor(Color.parseColor("#0b0e14"));
-            window.setNavigationBarColor(Color.parseColor("#0b0e14"));
+            window.setStatusBarColor(Color.WHITE);
+            window.setNavigationBarColor(Color.WHITE);
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            View decor = getWindow().getDecorView();
+            decor.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
         }
 
         createNotificationChannel();
 
         webView = new WebView(this);
+        webView.setBackgroundColor(Color.WHITE);
         setContentView(webView);
 
         WebSettings settings = webView.getSettings();
@@ -60,8 +65,10 @@ public class MainActivity extends Activity {
         webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         webView.setWebChromeClient(new WebChromeClient());
 
-        // Puente nativo para Notificaciones Push de cobros
-        webView.addJavascriptInterface(new AndroidBridge(this), "AndroidApp");
+        // Puente nativo para Notificaciones Push de cobros y sincronización de barras del sistema
+        AndroidBridge bridge = new AndroidBridge(this);
+        webView.addJavascriptInterface(bridge, "AndroidApp");
+        webView.addJavascriptInterface(bridge, "AndroidBridge");
 
         webView.setWebViewClient(new WebViewClient() {
             @Override
@@ -80,6 +87,21 @@ public class MainActivity extends Activity {
                     } catch (Exception e) {}
                 }
                 return false;
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                view.evaluateJavascript(
+                    "(function() { return document.documentElement.getAttribute('data-theme') || localStorage.getItem('finanflow_theme') || 'light'; })();",
+                    new android.webkit.ValueCallback<String>() {
+                        @Override
+                        public void onReceiveValue(String value) {
+                            boolean isDark = (value != null && value.toLowerCase().contains("dark"));
+                            updateSystemBars(isDark ? "#0b0e14" : "#ffffff", !isDark);
+                        }
+                    }
+                );
             }
 
             @Override
@@ -131,11 +153,58 @@ public class MainActivity extends Activity {
         }
     }
 
+    public void updateSystemBars(final String colorHex, final boolean isLight) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    int color = Color.parseColor(colorHex);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        Window window = getWindow();
+                        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+                        window.setStatusBarColor(color);
+                        window.setNavigationBarColor(color);
+                    }
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        View decor = getWindow().getDecorView();
+                        int flags = decor.getSystemUiVisibility();
+                        if (isLight) {
+                            flags |= View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+                        } else {
+                            flags &= ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+                        }
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            if (isLight) {
+                                flags |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+                            } else {
+                                flags &= ~View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+                            }
+                        }
+                        decor.setSystemUiVisibility(flags);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
     public static class AndroidBridge {
         private final MainActivity activity;
 
         public AndroidBridge(MainActivity activity) {
             this.activity = activity;
+        }
+
+        @JavascriptInterface
+        public void setStatusBarColor(final String colorHex, final boolean isLight) {
+            activity.updateSystemBars(colorHex, isLight);
+        }
+
+        @JavascriptInterface
+        public void setAppTheme(final String theme) {
+            boolean isLight = "light".equalsIgnoreCase(theme);
+            activity.updateSystemBars(isLight ? "#ffffff" : "#0b0e14", isLight);
         }
 
         @JavascriptInterface

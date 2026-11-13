@@ -1038,13 +1038,23 @@ const App = {
   },
 
   updateAndroidStatusBar(theme) {
-    const metaTheme = document.querySelector('meta[name="theme-color"]');
-    if (metaTheme) {
-      metaTheme.setAttribute('content', theme === 'dark' ? '#0b0e14' : '#f8fafc');
-    }
+    const isDark = theme === 'dark';
+    const color = isDark ? '#0b0e14' : '#ffffff';
+    const metaThemes = document.querySelectorAll('meta[name="theme-color"]');
+    metaThemes.forEach(m => m.setAttribute('content', color));
+
     const metaApple = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
     if (metaApple) {
-      metaApple.setAttribute('content', theme === 'dark' ? 'black-translucent' : 'default');
+      metaApple.setAttribute('content', isDark ? 'black-translucent' : 'default');
+    }
+
+    const bridge = window.AndroidApp || window.AndroidBridge;
+    if (bridge && typeof bridge.setStatusBarColor === 'function') {
+      try {
+        bridge.setStatusBarColor(color, !isDark);
+      } catch (err) {
+        console.warn('Native status bar sync error:', err);
+      }
     }
   },
 
