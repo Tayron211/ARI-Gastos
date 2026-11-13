@@ -1,4 +1,4 @@
-# Build Script for Native Android APK - ARI-Control with Push Notifications
+﻿# Build Script for Native Android APK - ARI-Control with Push Notifications
 $ErrorActionPreference = "Stop"
 
 $SDK_DIR = "C:\Android"
@@ -27,13 +27,24 @@ New-Item -ItemType Directory -Path "$ANDROID_DIR\build\gen" -Force | Out-Null
 
 $utf8NoBom = [System.Text.UTF8Encoding]::new($false)
 
-# 1. Manifest con permisos de notificaciones push y vibración
+# 1. Manifest con compatibilidad completa Android (minSdk 24 - targetSdk 34) y Notificaciones Push
 $manifest = @"
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.aricontrol.app"
-    android:versionCode="205"
-    android:versionName="2.5.0">
+    android:versionCode="206"
+    android:versionName="2.6.0">
+
+    <uses-sdk
+        android:minSdkVersion="24"
+        android:targetSdkVersion="34" />
+
+    <supports-screens
+        android:anyDensity="true"
+        android:smallScreens="true"
+        android:normalScreens="true"
+        android:largeScreens="true"
+        android:xlargeScreens="true" />
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -47,7 +58,8 @@ $manifest = @"
         android:roundIcon="@mipmap/ic_launcher"
         android:theme="@android:style/Theme.NoTitleBar"
         android:hardwareAccelerated="true"
-        android:usesCleartextTraffic="true">
+        android:usesCleartextTraffic="true"
+        android:allowBackup="true">
 
         <activity
             android:name="com.aricontrol.app.MainActivity"
@@ -327,11 +339,15 @@ Write-Host ">>> Compilando recursos con aapt2..."
 & "$BUILD_TOOLS\aapt2.exe" compile --dir "$ANDROID_DIR\res" -o "$ANDROID_DIR\build\compiled_res\res.zip"
 if ($LASTEXITCODE -ne 0) { throw "aapt2 compile failed" }
 
-Write-Host ">>> Enlazando recursos con aapt2 link..."
+Write-Host ">>> Enlazando recursos con aapt2 link (minSdk 24, targetSdk 34)..."
 & "$BUILD_TOOLS\aapt2.exe" link `
     -o "$ANDROID_DIR\build\app_unaligned.apk" `
     -I "$PLATFORM_JAR" `
     --manifest "$ANDROID_DIR\AndroidManifest.xml" `
+    --min-sdk-version 24 `
+    --target-sdk-version 34 `
+    --version-code 206 `
+    --version-name "2.6.0" `
     --java "$ANDROID_DIR\build\gen" `
     --auto-add-overlay `
     "$ANDROID_DIR\build\compiled_res\res.zip"
