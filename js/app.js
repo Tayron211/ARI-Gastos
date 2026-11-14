@@ -1118,37 +1118,39 @@ const App = {
     const updateBtnText = document.getElementById('btn-perform-app-update-text');
     const apkUrl = data.apkUrl || 'https://ari-gastos.pages.dev/ARI-Control.apk';
 
-    if (progressBox) progressBox.style.display = 'block';
-    if (updateBtn) updateBtn.disabled = true;
-    if (updateBtnText) updateBtnText.textContent = 'Iniciando descarga...';
+    const hasNativeUpdater = !!(bridge && typeof bridge.downloadAndInstallUpdate === 'function');
 
-    window.onUpdateDownloadProgress = (percent, message) => {
-      const bar = document.getElementById('update-progress-bar');
-      const pct = document.getElementById('update-progress-percent');
-      const lbl = document.getElementById('update-progress-label');
-      if (bar) bar.style.width = `${percent}%`;
-      if (pct) pct.textContent = `${percent}%`;
-      if (lbl && message) lbl.textContent = message;
-      if (updateBtnText) updateBtnText.textContent = `Descargando: ${percent}%`;
-      if (percent >= 100) {
-        if (updateBtnText) updateBtnText.textContent = 'Abriendo instalador Android...';
-      }
-    };
+    if (hasNativeUpdater) {
+      if (progressBox) progressBox.style.display = 'block';
+      if (updateBtn) updateBtn.disabled = true;
+      if (updateBtnText) updateBtnText.textContent = 'Iniciando descarga...';
 
-    window.onUpdateDownloadError = (errorMsg) => {
-      if (progressBox) progressBox.style.display = 'none';
-      if (updateBtn) updateBtn.disabled = false;
-      if (updateBtnText) updateBtnText.textContent = 'Reintentar Actualización';
-      Utils.showToast(`Error: ${errorMsg || 'Revisa tu conexión'}`, 'error');
-    };
+      window.onUpdateDownloadProgress = (percent, message) => {
+        const bar = document.getElementById('update-progress-bar');
+        const pct = document.getElementById('update-progress-percent');
+        const lbl = document.getElementById('update-progress-label');
+        if (bar) bar.style.width = `${percent}%`;
+        if (pct) pct.textContent = `${percent}%`;
+        if (lbl && message) lbl.textContent = message;
+        if (updateBtnText) updateBtnText.textContent = `Descargando: ${percent}%`;
+        if (percent >= 100) {
+          if (updateBtnText) updateBtnText.textContent = 'Abriendo instalador Android...';
+        }
+      };
 
-    window.onUpdatePermissionNeeded = () => {
-      if (updateBtn) updateBtn.disabled = false;
-      if (updateBtnText) updateBtnText.textContent = 'Permitir e Instalar';
-      Utils.showToast('Activa "Permitir desde esta fuente" y regresa a la app', 'info');
-    };
+      window.onUpdateDownloadError = (errorMsg) => {
+        if (progressBox) progressBox.style.display = 'none';
+        if (updateBtn) updateBtn.disabled = false;
+        if (updateBtnText) updateBtnText.textContent = 'Reintentar Actualización';
+        Utils.showToast(`Error: ${errorMsg || 'Revisa tu conexión'}`, 'error');
+      };
 
-    if (bridge && typeof bridge.downloadAndInstallUpdate === 'function') {
+      window.onUpdatePermissionNeeded = () => {
+        if (updateBtn) updateBtn.disabled = false;
+        if (updateBtnText) updateBtnText.textContent = 'Permitir e Instalar';
+        Utils.showToast('Activa "Permitir desde esta fuente" y regresa a la app', 'info');
+      };
+
       try {
         bridge.downloadAndInstallUpdate(apkUrl, data.versionName || '2.9.0');
       } catch (err) {
@@ -1156,6 +1158,19 @@ const App = {
         window.location.href = apkUrl;
       }
     } else {
+      if (progressBox) progressBox.style.display = 'none';
+      Utils.showToast('Descargando la nueva compilación...', 'info');
+      if (updateBtnText) updateBtnText.textContent = 'Descargando...';
+
+      const link = document.createElement('a');
+      link.href = apkUrl;
+      link.download = 'ARI-Control.apk';
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      setTimeout(() => {
+        if (link.parentNode) link.parentNode.removeChild(link);
+      }, 500);
       window.location.href = apkUrl;
     }
   },

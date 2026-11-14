@@ -474,7 +474,8 @@ public class MainActivity extends Activity {
             @Override
             public void run() {
                 if (webView != null) {
-                    webView.evaluateJavascript("if (window.onUpdateDownloadProgress) { window.onUpdateDownloadProgress(" + percent + ", '" + message.replace("'", "\\'") + "'); }", null);
+                    String cleanMsg = (message != null ? message.replace("\\", "\\\\").replace("'", "\\'").replace("\n", " ").replace("\r", " ") : "");
+                    webView.evaluateJavascript("if (window.onUpdateDownloadProgress) { window.onUpdateDownloadProgress(" + percent + ", '" + cleanMsg + "'); }", null);
                 }
             }
         });
@@ -485,7 +486,8 @@ public class MainActivity extends Activity {
             @Override
             public void run() {
                 if (webView != null) {
-                    webView.evaluateJavascript("if (window.onUpdateDownloadError) { window.onUpdateDownloadError('" + (error != null ? error.replace("'", "\\'") : "Error") + "'); }", null);
+                    String cleanErr = (error != null ? error.replace("\\", "\\\\").replace("'", "\\'").replace("\n", " ").replace("\r", " ") : "Error desconocido");
+                    webView.evaluateJavascript("if (window.onUpdateDownloadError) { window.onUpdateDownloadError('" + cleanErr + "'); }", null);
                 }
             }
         });
