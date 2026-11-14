@@ -1,14 +1,14 @@
 {
-  "versionCode": 210,
-  "versionName": "2.9.1",
+  "versionCode": 211,
+  "versionName": "2.9.2",
   "minSupportedVersion": 100,
   "apkUrl": "https://ari-gastos.pages.dev/ARI-Control.apk",
   "releaseDate": "2026-11-14",
   "forceUpdate": false,
-  "title": "Nueva Versión 2.9.1 Disponible",
+  "title": "Nueva Versión 2.9.2 Disponible",
   "changelog": [
-    "Instalación directa con 1 toque sin conflicto de paquetes",
-    "Firma criptográfica permanente y estable",
-    "Optimización de rendimiento y sincronización en segundo plano"
+    "Actualización fluida con 1 toque optimizada para Xiaomi",
+    "Firmas criptográficas V1, V2 y V3 habilitadas",
+    "Exclusividad nativa perfeccionada"
   ]
 }
