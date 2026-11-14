@@ -2049,14 +2049,34 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
    ========================================================================== */
 .app-splash-screen {
   position: fixed;
-  inset: 0;
-  z-index: 999999;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden !important;
+  overscroll-behavior: none;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  z-index: 9999999;
   background: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: opacity 0.42s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.42s ease;
   pointer-events: auto;
+}
+
+.app-splash-screen::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+body.splash-active {
+  overflow: hidden !important;
 }
 
 [data-theme="dark"] .app-splash-screen {

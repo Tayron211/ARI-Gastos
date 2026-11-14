@@ -1,0 +1,14 @@
+{
+  "versionCode": 208,
+  "versionName": "2.8.0",
+  "minSupportedVersion": 100,
+  "apkUrl": "https://ari-gastos.pages.dev/ARI-Control.apk",
+  "releaseDate": "2026-11-14",
+  "forceUpdate": false,
+  "title": "Nueva Actualización Disponible",
+  "changelog": [
+    "Splash screen perfeccionado sin barras de scroll",
+    "Instalador automático directo de actualizaciones dentro de la app",
+    "Sincronización de barra de estado y rendimiento optimizado"
+  ]
+}

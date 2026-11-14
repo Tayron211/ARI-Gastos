@@ -58,7 +58,7 @@
   <link rel="stylesheet" href="css/components.css?v=2.3.4">
 </head>
 
-<body data-page="expenses">
+<body data-page="expenses" class="splash-active">
 
   <!-- Elegant Minimalist Splash Screen -->
   <div id="app-splash-screen" class="app-splash-screen" aria-hidden="true">
@@ -1611,6 +1611,61 @@
         <button type="button" class="btn btn-secondary" id="btn-modal-install-now" style="width: 100%; margin-top: 10px; padding: 10px; justify-content: center; font-size: 0.82rem;" onclick="PWAController.triggerInstall()">
           <span>O instalar como PWA desde el navegador</span>
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================
+       MODAL 7: ACTUALIZACIÓN DISPONIBLE DE LA APP
+       =================================================================== -->
+  <div class="modal-backdrop" id="modal-app-update">
+    <div class="modal-dialog" style="max-width: 440px;">
+      <div class="modal-sheet-grabber"></div>
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(20, 184, 166, 0.16); border: 1px solid rgba(20, 184, 166, 0.4); display: flex; align-items: center; justify-content: center; color: #14b8a6;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+          </div>
+          <div>
+            <h3 style="margin: 0; font-size: 1.05rem;" id="modal-update-title">Nueva Versión Disponible</h3>
+            <p style="margin: 0; font-size: 0.75rem; color: var(--text-secondary);" id="modal-update-subtitle">Versión lista para instalar</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" data-close-modal="modal-app-update" type="button" id="btn-close-update-modal">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" style="padding: 16px;">
+        <div style="padding: 12px; border-radius: var(--radius-md); background: rgba(20, 184, 166, 0.08); border: 1px solid rgba(20, 184, 166, 0.25); margin-bottom: 14px;">
+          <div style="font-size: 0.78rem; font-weight: 700; color: var(--accent-aqua); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Novedades y Mejoras:</div>
+          <ul id="modal-update-changelog" style="margin: 0; padding-left: 18px; font-size: 0.8rem; color: var(--text-primary); line-height: 1.5;">
+            <!-- Rendered dynamically -->
+          </ul>
+        </div>
+
+        <div id="update-download-progress-box" style="display: none; margin-bottom: 14px;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.78rem; margin-bottom: 6px;">
+            <span id="update-progress-label" style="color: var(--text-secondary);">Descargando actualización...</span>
+            <span id="update-progress-percent" style="font-weight: 700; color: var(--accent-aqua);">0%</span>
+          </div>
+          <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.08); border-radius: 999px; overflow: hidden;">
+            <div id="update-progress-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #14b8a6, #2dd4bf); transition: width 0.2s ease;"></div>
+          </div>
+        </div>
+
+        <div id="update-actions-box" style="display: flex; flex-direction: column; gap: 8px;">
+          <button type="button" class="btn btn-aqua-glow" id="btn-perform-app-update" onclick="App.startAppUpdate()" style="width: 100%; padding: 12px; justify-content: center; font-size: 0.92rem; font-weight: 700;">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            <span id="btn-perform-app-update-text">Actualizar e Instalar</span>
+          </button>
+          <button type="button" class="btn btn-secondary" id="btn-later-app-update" data-close-modal="modal-app-update" style="width: 100%; padding: 9px; justify-content: center; font-size: 0.82rem;">
+            Más tarde
+          </button>
+        </div>
       </div>
     </div>
   </div>

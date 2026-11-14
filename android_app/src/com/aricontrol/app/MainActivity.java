@@ -93,6 +93,10 @@ public class MainActivity extends Activity {
         settings.setBuiltInZoomControls(false);
         settings.setDisplayZoomControls(false);
 
+        webView.setVerticalScrollBarEnabled(false);
+        webView.setHorizontalScrollBarEnabled(false);
+        webView.setOverScrollMode(View.OVER_SCROLL_NEVER);
+
         webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         webView.setWebChromeClient(new WebChromeClient());
 
@@ -229,11 +233,154 @@ public class MainActivity extends Activity {
         });
     }
 
+    public void notifyDownloadProgress(final int percent, final String message) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (webView != null) {
+                    webView.evaluateJavascript("if (window.onUpdateDownloadProgress) { window.onUpdateDownloadProgress(" + percent + ", '" + message.replace("'", "\\'") + "'); }", null);
+                }
+            }
+        });
+    }
+
+    public void notifyDownloadError(final String error) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (webView != null) {
+                    webView.evaluateJavascript("if (window.onUpdateDownloadError) { window.onUpdateDownloadError('" + (error != null ? error.replace("'", "\\'") : "Error") + "'); }", null);
+                }
+            }
+        });
+    }
+
+    public void promptInstallApk(final java.io.File apkFile) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        if (!getPackageManager().canRequestPackageInstalls()) {
+                            Intent settingsIntent = new Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES);
+                            settingsIntent.setData(Uri.parse("package:" + getPackageName()));
+                            startActivity(settingsIntent);
+                            if (webView != null) {
+                                webView.evaluateJavascript("if (window.onUpdatePermissionNeeded) { window.onUpdatePermissionNeeded(); }", null);
+                            }
+                            return;
+                        }
+                    }
+
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    Uri apkUri = GenericFileProvider.getUriForFile(MainActivity.this, apkFile);
+                    intent.setDataAndType(apkUri, "application/vnd.android.package-archive");
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    startActivity(intent);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    notifyDownloadError("No se pudo iniciar la instalación: " + e.getMessage());
+                }
+            }
+        });
+    }
+
     public static class AndroidBridge {
         private final MainActivity activity;
 
         public AndroidBridge(MainActivity activity) {
             this.activity = activity;
+        }
+
+        @JavascriptInterface
+        public int getAppVersionCode() {
+            try {
+                return activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0).versionCode;
+            } catch (Exception e) {
+                return 208;
+            }
+        }
+
+        @JavascriptInterface
+        public String getAppVersionName() {
+            try {
+                return activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0).versionName;
+            } catch (Exception e) {
+                return "2.8.0";
+            }
+        }
+
+        @JavascriptInterface
+        public boolean canRequestPackageInstalls() {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                return activity.getPackageManager().canRequestPackageInstalls();
+            }
+            return true;
+        }
+
+        @JavascriptInterface
+        public void openInstallPermissionSettings() {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                try {
+                    Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES);
+                    intent.setData(Uri.parse("package:" + activity.getPackageName()));
+                    activity.startActivity(intent);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        @JavascriptInterface
+        public void downloadAndInstallUpdate(final String downloadUrl, final String versionName) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        activity.notifyDownloadProgress(5, "Iniciando descarga segura...");
+                        java.io.File updatesDir = new java.io.File(activity.getExternalFilesDir(null), "updates");
+                        if (!updatesDir.exists()) updatesDir.mkdirs();
+                        java.io.File apkFile = new java.io.File(updatesDir, "ARI-Control-v" + versionName + ".apk");
+                        if (apkFile.exists()) apkFile.delete();
+
+                        java.net.URL url = new java.net.URL(downloadUrl);
+                        java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+                        conn.setConnectTimeout(15000);
+                        conn.setReadTimeout(30000);
+                        conn.connect();
+
+                        int fileLength = conn.getContentLength();
+                        java.io.InputStream input = new java.io.BufferedInputStream(conn.getInputStream());
+                        java.io.OutputStream output = new java.io.FileOutputStream(apkFile);
+
+                        byte[] data = new byte[8192];
+                        long total = 0;
+                        int count;
+                        int lastProgress = 0;
+
+                        while ((count = input.read(data)) != -1) {
+                            total += count;
+                            output.write(data, 0, count);
+                            if (fileLength > 0) {
+                                int progress = (int) (total * 100 / fileLength);
+                                if (progress >= lastProgress + 5 || progress == 100) {
+                                    lastProgress = progress;
+                                    activity.notifyDownloadProgress(progress, "Descargando actualización: " + progress + "%");
+                                }
+                            }
+                        }
+
+                        output.flush();
+                        output.close();
+                        input.close();
+
+                        activity.notifyDownloadProgress(100, "Descarga completada. Abriendo instalador...");
+                        activity.promptInstallApk(apkFile);
+                    } catch (final Exception e) {
+                        activity.notifyDownloadError(e.getMessage());
+                    }
+                }
+            }).start();
         }
 
         @JavascriptInterface

@@ -27,13 +27,13 @@ New-Item -ItemType Directory -Path "$ANDROID_DIR\build\gen" -Force | Out-Null
 
 $utf8NoBom = [System.Text.UTF8Encoding]::new($false)
 
-# 1. Manifest con compatibilidad completa Android (minSdk 24 - targetSdk 34) y Notificaciones Push
+# 1. Manifest con compatibilidad completa Android (minSdk 24 - targetSdk 34), Notificaciones y Actualizador In-App
 $manifest = @"
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.aricontrol.app"
-    android:versionCode="207"
-    android:versionName="2.7.0">
+    android:versionCode="208"
+    android:versionName="2.8.0">
 
     <uses-sdk
         android:minSdkVersion="24"
@@ -51,6 +51,7 @@ $manifest = @"
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <application
         android:label="@string/app_name"
@@ -73,6 +74,12 @@ $manifest = @"
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <provider
+            android:name="com.aricontrol.app.GenericFileProvider"
+            android:authorities="com.aricontrol.app.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true" />
     </application>
 </manifest>
 "@
@@ -99,11 +106,117 @@ Copy-Item "$PROJECT_DIR\index.html" "$ANDROID_DIR\assets\"
 Copy-Item "$PROJECT_DIR\prestamos.html" "$ANDROID_DIR\assets\"
 Copy-Item "$PROJECT_DIR\gastos.html" "$ANDROID_DIR\assets\"
 Copy-Item "$PROJECT_DIR\conversor.html" "$ANDROID_DIR\assets\"
+Copy-Item "$PROJECT_DIR\version.json" "$ANDROID_DIR\assets\"
 Copy-Item "$PROJECT_DIR\manifest.json" "$ANDROID_DIR\assets\"
 Copy-Item "$PROJECT_DIR\sw.js" "$ANDROID_DIR\assets\"
 Copy-Item -Recurse "$PROJECT_DIR\css" "$ANDROID_DIR\assets\"
 Copy-Item -Recurse "$PROJECT_DIR\js" "$ANDROID_DIR\assets\"
 Copy-Item -Recurse "$PROJECT_DIR\icons" "$ANDROID_DIR\assets\"
+
+# 4b. GenericFileProvider.java para compartir el APK descargado con el instalador del sistema
+$providerCode = @"
+package com.aricontrol.app;
+
+import android.content.ContentProvider;
+import android.content.ContentValues;
+import android.database.Cursor;
+import android.database.MatrixCursor;
+import android.net.Uri;
+import android.os.ParcelFileDescriptor;
+import android.provider.OpenableColumns;
+import java.io.File;
+import java.io.FileNotFoundException;
+
+public class GenericFileProvider extends ContentProvider {
+    public static final String AUTHORITY = "com.aricontrol.app.fileprovider";
+
+    @Override
+    public boolean onCreate() {
+        return true;
+    }
+
+    @Override
+    public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+        File file = getFileForUri(uri);
+        if (file == null || !file.exists()) return null;
+
+        String[] cols = projection != null ? projection : new String[]{
+            OpenableColumns.DISPLAY_NAME,
+            OpenableColumns.SIZE
+        };
+
+        MatrixCursor cursor = new MatrixCursor(cols, 1);
+        MatrixCursor.RowBuilder row = cursor.newRow();
+        for (String col : cols) {
+            if (OpenableColumns.DISPLAY_NAME.equals(col)) {
+                row.add(file.getName());
+            } else if (OpenableColumns.SIZE.equals(col)) {
+                row.add(file.length());
+            } else {
+                row.add(null);
+            }
+        }
+        return cursor;
+    }
+
+    @Override
+    public String getType(Uri uri) {
+        return "application/vnd.android.package-archive";
+    }
+
+    @Override
+    public ParcelFileDescriptor openFile(Uri uri, String mode) throws FileNotFoundException {
+        File file = getFileForUri(uri);
+        if (file == null || !file.exists()) {
+            throw new FileNotFoundException("File not found: " + uri);
+        }
+        return ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY);
+    }
+
+    @Override
+    public Uri insert(Uri uri, ContentValues values) {
+        return null;
+    }
+
+    @Override
+    public int delete(Uri uri, String selection, String[] selectionArgs) {
+        File file = getFileForUri(uri);
+        if (file != null && file.exists()) {
+            return file.delete() ? 1 : 0;
+        }
+        return 0;
+    }
+
+    @Override
+    public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
+        return 0;
+    }
+
+    private File getFileForUri(Uri uri) {
+        if (uri == null) return null;
+        String path = uri.getPath();
+        if (path == null) return null;
+        if (path.startsWith("/")) {
+            path = path.substring(1);
+        }
+        File baseDir = getContext().getExternalFilesDir(null);
+        if (baseDir == null) {
+            baseDir = getContext().getFilesDir();
+        }
+        return new File(baseDir, path);
+    }
+
+    public static Uri getUriForFile(android.content.Context context, File file) {
+        File baseDir = context.getExternalFilesDir(null);
+        if (baseDir == null) {
+            baseDir = context.getFilesDir();
+        }
+        String relativePath = baseDir.toURI().relativize(file.toURI()).getPath();
+        return Uri.parse("content://" + AUTHORITY + "/" + relativePath);
+    }
+}
+"@
+[System.IO.File]::WriteAllText("$ANDROID_DIR\src\com\aricontrol\app\GenericFileProvider.java", $providerCode, $utf8NoBom)
 
 # 5. MainActivity.java con soporte completo de NotificationManager y JavascriptInterface
 $javaCode = @"
@@ -201,6 +314,10 @@ public class MainActivity extends Activity {
         settings.setSupportZoom(false);
         settings.setBuiltInZoomControls(false);
         settings.setDisplayZoomControls(false);
+
+        webView.setVerticalScrollBarEnabled(false);
+        webView.setHorizontalScrollBarEnabled(false);
+        webView.setOverScrollMode(View.OVER_SCROLL_NEVER);
 
         webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         webView.setWebChromeClient(new WebChromeClient());
@@ -338,11 +455,154 @@ public class MainActivity extends Activity {
         });
     }
 
+    public void notifyDownloadProgress(final int percent, final String message) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (webView != null) {
+                    webView.evaluateJavascript("if (window.onUpdateDownloadProgress) { window.onUpdateDownloadProgress(" + percent + ", '" + message.replace("'", "\\'") + "'); }", null);
+                }
+            }
+        });
+    }
+
+    public void notifyDownloadError(final String error) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (webView != null) {
+                    webView.evaluateJavascript("if (window.onUpdateDownloadError) { window.onUpdateDownloadError('" + (error != null ? error.replace("'", "\\'") : "Error") + "'); }", null);
+                }
+            }
+        });
+    }
+
+    public void promptInstallApk(final java.io.File apkFile) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        if (!getPackageManager().canRequestPackageInstalls()) {
+                            Intent settingsIntent = new Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES);
+                            settingsIntent.setData(Uri.parse("package:" + getPackageName()));
+                            startActivity(settingsIntent);
+                            if (webView != null) {
+                                webView.evaluateJavascript("if (window.onUpdatePermissionNeeded) { window.onUpdatePermissionNeeded(); }", null);
+                            }
+                            return;
+                        }
+                    }
+
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    Uri apkUri = GenericFileProvider.getUriForFile(MainActivity.this, apkFile);
+                    intent.setDataAndType(apkUri, "application/vnd.android.package-archive");
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    startActivity(intent);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    notifyDownloadError("No se pudo iniciar la instalación: " + e.getMessage());
+                }
+            }
+        });
+    }
+
     public static class AndroidBridge {
         private final MainActivity activity;
 
         public AndroidBridge(MainActivity activity) {
             this.activity = activity;
+        }
+
+        @JavascriptInterface
+        public int getAppVersionCode() {
+            try {
+                return activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0).versionCode;
+            } catch (Exception e) {
+                return 208;
+            }
+        }
+
+        @JavascriptInterface
+        public String getAppVersionName() {
+            try {
+                return activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0).versionName;
+            } catch (Exception e) {
+                return "2.8.0";
+            }
+        }
+
+        @JavascriptInterface
+        public boolean canRequestPackageInstalls() {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                return activity.getPackageManager().canRequestPackageInstalls();
+            }
+            return true;
+        }
+
+        @JavascriptInterface
+        public void openInstallPermissionSettings() {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                try {
+                    Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES);
+                    intent.setData(Uri.parse("package:" + activity.getPackageName()));
+                    activity.startActivity(intent);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        @JavascriptInterface
+        public void downloadAndInstallUpdate(final String downloadUrl, final String versionName) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        activity.notifyDownloadProgress(5, "Iniciando descarga segura...");
+                        java.io.File updatesDir = new java.io.File(activity.getExternalFilesDir(null), "updates");
+                        if (!updatesDir.exists()) updatesDir.mkdirs();
+                        java.io.File apkFile = new java.io.File(updatesDir, "ARI-Control-v" + versionName + ".apk");
+                        if (apkFile.exists()) apkFile.delete();
+
+                        java.net.URL url = new java.net.URL(downloadUrl);
+                        java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+                        conn.setConnectTimeout(15000);
+                        conn.setReadTimeout(30000);
+                        conn.connect();
+
+                        int fileLength = conn.getContentLength();
+                        java.io.InputStream input = new java.io.BufferedInputStream(conn.getInputStream());
+                        java.io.OutputStream output = new java.io.FileOutputStream(apkFile);
+
+                        byte[] data = new byte[8192];
+                        long total = 0;
+                        int count;
+                        int lastProgress = 0;
+
+                        while ((count = input.read(data)) != -1) {
+                            total += count;
+                            output.write(data, 0, count);
+                            if (fileLength > 0) {
+                                int progress = (int) (total * 100 / fileLength);
+                                if (progress >= lastProgress + 5 || progress == 100) {
+                                    lastProgress = progress;
+                                    activity.notifyDownloadProgress(progress, "Descargando actualización: " + progress + "%");
+                                }
+                            }
+                        }
+
+                        output.flush();
+                        output.close();
+                        input.close();
+
+                        activity.notifyDownloadProgress(100, "Descarga completada. Abriendo instalador...");
+                        activity.promptInstallApk(apkFile);
+                    } catch (final Exception e) {
+                        activity.notifyDownloadError(e.getMessage());
+                    }
+                }
+            }).start();
         }
 
         @JavascriptInterface
@@ -455,8 +715,8 @@ Write-Host ">>> Enlazando recursos con aapt2 link (minSdk 24, targetSdk 34)..."
     --manifest "$ANDROID_DIR\AndroidManifest.xml" `
     --min-sdk-version 24 `
     --target-sdk-version 34 `
-    --version-code 206 `
-    --version-name "2.6.0" `
+    --version-code 208 `
+    --version-name "2.8.0" `
     --java "$ANDROID_DIR\build\gen" `
     --auto-add-overlay `
     "$ANDROID_DIR\build\compiled_res\res.zip"

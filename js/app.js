@@ -47,13 +47,20 @@ const App = {
 
     // Dismiss Splash Screen smoothly after brief delay
     this.dismissSplashScreen();
+
+    // Check for native app or PWA updates in background
+    setTimeout(() => {
+      this.checkAppUpdate();
+    }, 1200);
   },
 
   dismissSplashScreen() {
     const splash = document.getElementById('app-splash-screen');
     if (splash) {
+      document.body.classList.add('splash-active');
       setTimeout(() => {
         splash.classList.add('fade-out');
+        document.body.classList.remove('splash-active');
         setTimeout(() => {
           if (splash.parentNode) splash.parentNode.removeChild(splash);
         }, 450);
@@ -1021,6 +1028,143 @@ const App = {
           penLabel.classList.remove('selected-pen');
         }
       });
+    }
+  },
+
+  currentUpdateInfo: null,
+
+  async checkAppUpdate() {
+    try {
+      const res = await fetch(`version.json?t=${Date.now()}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!data || !data.versionCode) return;
+
+      const bridge = window.AndroidApp || window.AndroidBridge;
+      let currentCode = 207; // Default or web version code
+      let currentName = '2.7.0';
+
+      if (bridge && typeof bridge.getAppVersionCode === 'function') {
+        try {
+          currentCode = bridge.getAppVersionCode();
+          if (typeof bridge.getAppVersionName === 'function') {
+            currentName = bridge.getAppVersionName();
+          }
+        } catch (e) {
+          console.warn('Error reading native app version code:', e);
+        }
+      } else {
+        currentCode = parseInt(localStorage.getItem('ari_installed_version_code') || '207', 10);
+      }
+
+      if (data.versionCode > currentCode) {
+        this.currentUpdateInfo = data;
+        const dismissedKey = `ari_dismissed_update_${data.versionCode}`;
+        if (!data.forceUpdate && sessionStorage.getItem(dismissedKey)) {
+          return;
+        }
+        this.showUpdateModal(data);
+      }
+    } catch (err) {
+      console.warn('Silent update check:', err);
+    }
+  },
+
+  showUpdateModal(data) {
+    const modal = document.getElementById('modal-app-update');
+    if (!modal) return;
+
+    const titleEl = document.getElementById('modal-update-title');
+    const subEl = document.getElementById('modal-update-subtitle');
+    const changelogEl = document.getElementById('modal-update-changelog');
+    const closeBtn = document.getElementById('btn-close-update-modal');
+    const laterBtn = document.getElementById('btn-later-app-update');
+
+    if (titleEl) titleEl.textContent = data.title || 'Nueva Actualización Disponible';
+    if (subEl) subEl.textContent = `Versión ${data.versionName || ''} lista para instalar`;
+
+    if (changelogEl) {
+      if (Array.isArray(data.changelog) && data.changelog.length > 0) {
+        changelogEl.innerHTML = data.changelog.map(item => `<li>${item}</li>`).join('');
+      } else {
+        changelogEl.innerHTML = `<li>Mejoras de estabilidad y nuevas funciones.</li>`;
+      }
+    }
+
+    if (data.forceUpdate) {
+      if (closeBtn) closeBtn.style.display = 'none';
+      if (laterBtn) laterBtn.style.display = 'none';
+    } else {
+      if (closeBtn) closeBtn.style.display = 'flex';
+      if (laterBtn) laterBtn.style.display = 'flex';
+      if (laterBtn) {
+        laterBtn.onclick = () => {
+          sessionStorage.setItem(`ari_dismissed_update_${data.versionCode}`, 'true');
+          App.closeModal('modal-app-update');
+        };
+      }
+    }
+
+    this.openModal('modal-app-update');
+  },
+
+  startAppUpdate() {
+    if (!this.currentUpdateInfo) return;
+    const data = this.currentUpdateInfo;
+    const bridge = window.AndroidApp || window.AndroidBridge;
+
+    const progressBox = document.getElementById('update-download-progress-box');
+    const updateBtn = document.getElementById('btn-perform-app-update');
+    const updateBtnText = document.getElementById('btn-perform-app-update-text');
+
+    if (bridge && typeof bridge.downloadAndInstallUpdate === 'function') {
+      if (progressBox) progressBox.style.display = 'block';
+      if (updateBtn) updateBtn.disabled = true;
+      if (updateBtnText) updateBtnText.textContent = 'Descargando actualización...';
+
+      window.onUpdateDownloadProgress = (percent, message) => {
+        const bar = document.getElementById('update-progress-bar');
+        const pct = document.getElementById('update-progress-percent');
+        const lbl = document.getElementById('update-progress-label');
+        if (bar) bar.style.width = `${percent}%`;
+        if (pct) pct.textContent = `${percent}%`;
+        if (lbl && message) lbl.textContent = message;
+        if (updateBtnText) updateBtnText.textContent = `Descargando: ${percent}%`;
+        if (percent >= 100) {
+          if (updateBtnText) updateBtnText.textContent = 'Abriendo instalador...';
+        }
+      };
+
+      window.onUpdateDownloadError = (errorMsg) => {
+        if (progressBox) progressBox.style.display = 'none';
+        if (updateBtn) updateBtn.disabled = false;
+        if (updateBtnText) updateBtnText.textContent = 'Reintentar Actualización';
+        Utils.showToast(`Error al descargar: ${errorMsg || 'Revisa tu conexión'}`, 'error');
+      };
+
+      window.onUpdatePermissionNeeded = () => {
+        if (updateBtn) updateBtn.disabled = false;
+        if (updateBtnText) updateBtnText.textContent = 'Habilitar Permiso e Instalar';
+        Utils.showToast('Permite instalar aplicaciones desde esta fuente en Ajustes', 'info');
+      };
+
+      try {
+        bridge.downloadAndInstallUpdate(data.apkUrl || 'https://ari-gastos.pages.dev/ARI-Control.apk', data.versionName || 'update');
+      } catch (err) {
+        console.error('Error invoking native updater:', err);
+        window.location.href = data.apkUrl || './ARI-Control.apk';
+      }
+    } else {
+      Utils.showToast('Descargando la última versión del APK...', 'info');
+      const link = document.createElement('a');
+      link.href = data.apkUrl || './ARI-Control.apk';
+      link.download = 'ARI-Control.apk';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => {
+        App.closeModal('modal-app-update');
+      }, 1000);
     }
   },
 
