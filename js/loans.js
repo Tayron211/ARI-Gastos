@@ -2035,7 +2035,7 @@ const LoansModule = {
     App.openModal('modal-loan-history');
   },
 
-  markFullPayment(loanId) {
+  async markFullPayment(loanId) {
     const loans = Storage.getLoans();
     const index = loans.findIndex(x => x.id === loanId);
     if (index === -1) return;
@@ -2138,7 +2138,7 @@ const LoansModule = {
     }
   },
 
-  deletePayment(loanId, historyIndex) {
+  async deletePayment(loanId, historyIndex) {
     const loans = Storage.getLoans();
     const index = loans.findIndex(x => x.id === loanId);
     if (index === -1) return;

@@ -1675,15 +1675,35 @@
   <div class="toast-container" id="toast-container"></div>
 
   <!-- JavaScript Modules -->
-  <script src="js/utils.js?v=2.3.3"></script>
-  <script src="js/storage.js?v=2.3.3"></script>
-  <script src="js/expenses.js?v=2.3.3"></script>
-  <script src="js/loans.js?v=2.3.3"></script>
-  <script src="js/converter.js?v=2.3.3"></script>
-  <script src="js/reports.js?v=2.3.3"></script>
-  <script src="js/notifications.js?v=2.3.3"></script>
-  <script src="js/app.js?v=2.3.3"></script>
-  <script src="js/pwa.js?v=2.3.3"></script>
+  <script src="js/utils.js?v=2.9.1"></script>
+  <script src="js/storage.js?v=2.9.1"></script>
+  <script src="js/expenses.js?v=2.9.1"></script>
+  <script src="js/loans.js?v=2.9.1"></script>
+  <script src="js/converter.js?v=2.9.1"></script>
+  <script src="js/reports.js?v=2.9.1"></script>
+  <script src="js/notifications.js?v=2.9.1"></script>
+  <script src="js/app.js?v=2.9.1"></script>
+  <script src="js/pwa.js?v=2.9.1"></script>
+
+  <!-- Fail-Safe Inmune: Ocultar Splash Screen en caso de cualquier retraso -->
+  <script>
+    (function() {
+      var forceDismiss = function() {
+        var splash = document.getElementById('app-splash-screen');
+        if (splash && !splash.classList.contains('fade-out')) {
+          splash.classList.add('fade-out');
+          document.body.classList.remove('splash-active');
+          setTimeout(function() {
+            if (splash.parentNode) splash.parentNode.removeChild(splash);
+          }, 400);
+        }
+      };
+      setTimeout(forceDismiss, 1200);
+      window.addEventListener('load', function() {
+        setTimeout(forceDismiss, 400);
+      });
+    })();
+  </script>
 </body>
 
 </html>
