@@ -1,4 +1,4 @@
-# Build Script for Native Android APK - ARI-Control with Push Notifications
+﻿# Build Script for Native Android APK - ARI-Control with Push Notifications
 $ErrorActionPreference = "Stop"
 
 $SDK_DIR = "C:\Android"
@@ -825,8 +825,8 @@ if (Test-Path $alignedApk) { Remove-Item -Force $alignedApk }
 & "$BUILD_TOOLS\zipalign.exe" -v -p 4 "$ANDROID_DIR\build\app_unaligned.apk" $alignedApk
 if ($LASTEXITCODE -ne 0) { throw "zipalign failed" }
 
-Write-Host ">>> Generando clave de firma criptográfica para APK nativo..."
-$keystore = "$ANDROID_DIR\release.keystore"
+Write-Host ">>> Cargando clave de firma criptográfica permanente para APK nativo..."
+$keystore = "$PROJECT_DIR\release.keystore"
 if (-not (Test-Path $keystore)) {
     & keytool -genkeypair -v -keystore $keystore -alias aricontrol -keyalg RSA -keysize 2048 -validity 10000 `
         -storepass aricontrol2026 -keypass aricontrol2026 `
