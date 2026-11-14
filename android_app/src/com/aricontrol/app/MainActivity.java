@@ -372,19 +372,20 @@ public class MainActivity extends Activity {
                     java.io.InputStream input = null;
                     java.io.OutputStream output = null;
                     try {
-                        activity.notifyDownloadProgress(5, "Iniciando descarga segura...");
-                        java.io.File updatesDir = new java.io.File(activity.getExternalFilesDir(null), "updates");
+                        activity.notifyDownloadProgress(10, "Iniciando descarga segura...");
+                        java.io.File updatesDir = new java.io.File(activity.getCacheDir(), "updates");
                         if (!updatesDir.exists()) updatesDir.mkdirs();
-                        java.io.File apkFile = new java.io.File(updatesDir, "ARI-Control-v" + versionName + ".apk");
+                        java.io.File apkFile = new java.io.File(updatesDir, "ARI-Control.apk");
                         if (apkFile.exists()) apkFile.delete();
 
                         String currentUrl = downloadUrl;
                         java.net.URL url = new java.net.URL(currentUrl);
                         conn = (java.net.HttpURLConnection) url.openConnection();
                         conn.setInstanceFollowRedirects(true);
-                        conn.setConnectTimeout(20000);
+                        conn.setConnectTimeout(15000);
                         conn.setReadTimeout(30000);
-                        conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Android; Mobile)");
+                        conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Android; Mobile; AriControl/2.9)");
+                        conn.setRequestProperty("Accept-Encoding", "identity");
                         conn.connect();
 
                         int responseCode = conn.getResponseCode();
@@ -394,35 +395,43 @@ public class MainActivity extends Activity {
                             String redirectUrl = conn.getHeaderField("Location");
                             if (redirectUrl != null) {
                                 conn.disconnect();
-                                url = new java.net.URL(redirectUrl);
+                                url = new java.net.URL(url, redirectUrl);
                                 conn = (java.net.HttpURLConnection) url.openConnection();
-                                conn.setConnectTimeout(20000);
+                                conn.setConnectTimeout(15000);
                                 conn.setReadTimeout(30000);
-                                conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Android; Mobile)");
+                                conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Android; Mobile; AriControl/2.9)");
+                                conn.setRequestProperty("Accept-Encoding", "identity");
                                 conn.connect();
                             }
                         }
 
-                        int fileLength = conn.getContentLength();
+                        long fileLength = conn.getContentLength();
+                        if (fileLength <= 0) {
+                            String lenHdr = conn.getHeaderField("Content-Length");
+                            if (lenHdr != null) {
+                                try { fileLength = Long.parseLong(lenHdr); } catch (Exception ignored) {}
+                            }
+                        }
+                        if (fileLength <= 0) {
+                            fileLength = 1350000L;
+                        }
+
                         input = new java.io.BufferedInputStream(conn.getInputStream());
                         output = new java.io.FileOutputStream(apkFile);
 
                         byte[] data = new byte[8192];
                         long total = 0;
                         int count;
-                        int lastProgress = 0;
+                        int lastProgress = 10;
 
                         while ((count = input.read(data)) != -1) {
-                            total += count;
                             output.write(data, 0, count);
-                            if (fileLength > 0) {
-                                int progress = (int) (total * 100 / fileLength);
-                                if (progress >= lastProgress + 5 || progress == 100) {
-                                    lastProgress = progress;
-                                    activity.notifyDownloadProgress(progress, "Descargando: " + progress + "% (" + Math.round(total / 1024.0 / 1024.0 * 10.0)/10.0 + " MB)");
-                                }
-                            } else {
-                                activity.notifyDownloadProgress(50, "Descargando: " + Math.round(total / 1024.0 / 1024.0 * 10.0)/10.0 + " MB");
+                            total += count;
+                            int progress = (int) Math.min(95, Math.max(10, (total * 95) / fileLength));
+                            if (progress >= lastProgress + 5) {
+                                lastProgress = progress;
+                                String mb = String.format(java.util.Locale.US, "%.1f MB", total / (1024.0 * 1024.0));
+                                activity.notifyDownloadProgress(progress, "Descargando: " + progress + "% (" + mb + ")");
                             }
                         }
 
@@ -432,7 +441,7 @@ public class MainActivity extends Activity {
                         input.close();
                         input = null;
 
-                        activity.notifyDownloadProgress(100, "Descarga completada. Abriendo instalador...");
+                        activity.notifyDownloadProgress(100, "Descarga lista. Abriendo instalador...");
                         activity.promptInstallApk(apkFile);
                     } catch (final Exception e) {
                         activity.notifyDownloadError(e.getMessage());
