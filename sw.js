@@ -3,7 +3,7 @@
  * Progressive Web App Offline & Asset Caching Engine
  */
 
-const CACHE_NAME = 'ari-control-v2.4.4';
+const CACHE_NAME = 'ari-control-v2.6.2';
 
 const PRECACHE_ASSETS = [
   './',

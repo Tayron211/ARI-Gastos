@@ -124,7 +124,7 @@ export async function onRequestPost(context) {
           exp.date || '',
           exp.notes || '',
           exp.timestamp || Date.now(),
-          Date.now()
+          exp.updatedAt || Date.now()
         )
       );
     }
@@ -192,7 +192,7 @@ export async function onRequestPost(context) {
           Number(l.interestOnlyPaid) || 0,
           Number(l.interestOnlyCount) || 0,
           historyStr,
-          Date.now()
+          l.updatedAt || Date.now()
         )
       );
     }

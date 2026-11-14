@@ -114,7 +114,7 @@ const HISTORICAL_USER_LOAN = {
   interestAmount: 80.00,
   totalAmount: 480.00,
   totalInstallments: 5,
-  paidInstallments: 1,
+  paidInstallments: 0,
   installmentAmount: 80.00,
   customInterestPayment: 80.00,
   startDate: "2026-10-09",
@@ -123,14 +123,6 @@ const HISTORICAL_USER_LOAN = {
   currency: "PEN",
   frequency: "monthly",
   history: [
-    {
-      installmentNumber: "Cuota #1",
-      date: "2026-10-09",
-      amount: 80.00,
-      type: "INSTALLMENT",
-      method: "Efectivo",
-      receiptCode: "REC-261009-1001"
-    },
     {
       installmentNumber: "Solo Interés #1",
       date: "2026-11-12",
@@ -141,7 +133,8 @@ const HISTORICAL_USER_LOAN = {
       receiptCode: "REC-261112-1002",
       notes: "Pago de solo intereses #1"
     }
-  ]
+  ],
+  updatedAt: 1794664287354
 };
 
 const Storage = {
@@ -184,7 +177,8 @@ const Storage = {
       date: /^\d{4}-\d{2}-\d{2}$/.test(String(item.date || '')) ? String(item.date) : (typeof Utils !== 'undefined' ? Utils.getTodayString() : '2026-10-01'),
       paymentMethod: cleanText(item.paymentMethod || 'Efectivo', 80),
       notes: cleanText(item.notes || '', 300),
-      currency: item.currency === 'EUR' ? 'EUR' : 'PEN'
+      currency: item.currency === 'EUR' ? 'EUR' : 'PEN',
+      updatedAt: Number(item.updatedAt) || Number(item.timestamp) || Date.now()
     };
   },
 
@@ -246,7 +240,8 @@ const Storage = {
       guarantee: cleanText(item.guarantee || '', 200),
       notes: cleanText(item.notes || '', 300),
       currency: item.currency === 'EUR' ? 'EUR' : 'PEN',
-      history
+      history,
+      updatedAt: Number(item.updatedAt) || Date.now()
     };
   },
 
@@ -499,14 +494,22 @@ const Storage = {
 
   saveExpenses(expenses, markUserModified = true) {
     try {
+      const now = Date.now();
       const cleanList = Array.isArray(expenses)
-        ? expenses.map(item => this.sanitizeExpense(item)).filter(Boolean)
+        ? expenses.map(item => {
+            const sanitized = this.sanitizeExpense(item);
+            if (!sanitized) return null;
+            if (markUserModified) {
+              sanitized.updatedAt = now;
+            }
+            return sanitized;
+          }).filter(Boolean)
         : [];
       const serialized = JSON.stringify(cleanList);
       localStorage.setItem(STORAGE_KEYS.EXPENSES, serialized);
       localStorage.setItem(STORAGE_KEYS.VAULT_EXPENSES, serialized);
       if (markUserModified) {
-        localStorage.setItem(STORAGE_KEYS.LAST_MODIFIED, String(Date.now()));
+        localStorage.setItem(STORAGE_KEYS.LAST_MODIFIED, String(now));
       }
       this.persistSnapshotEverywhere();
       this.triggerCloudSync();
@@ -524,14 +527,22 @@ const Storage = {
 
   saveLoans(loans, markUserModified = true) {
     try {
+      const now = Date.now();
       const cleanList = Array.isArray(loans)
-        ? loans.map(item => this.sanitizeLoan(item)).filter(Boolean)
+        ? loans.map(item => {
+            const sanitized = this.sanitizeLoan(item);
+            if (!sanitized) return null;
+            if (markUserModified) {
+              sanitized.updatedAt = now;
+            }
+            return sanitized;
+          }).filter(Boolean)
         : [];
       const serialized = JSON.stringify(cleanList);
       localStorage.setItem(STORAGE_KEYS.LOANS, serialized);
       localStorage.setItem(STORAGE_KEYS.VAULT_LOANS, serialized);
       if (markUserModified) {
-        localStorage.setItem(STORAGE_KEYS.LAST_MODIFIED, String(Date.now()));
+        localStorage.setItem(STORAGE_KEYS.LAST_MODIFIED, String(now));
       }
       this.persistSnapshotEverywhere();
       this.triggerCloudSync();
@@ -556,7 +567,7 @@ const Storage = {
     clearTimeout(this._cloudSyncTimer);
     this._cloudSyncTimer = setTimeout(() => {
       this.pushToCloud();
-    }, 150);
+    }, 50);
   },
 
   async pushToCloud() {
@@ -564,11 +575,13 @@ const Storage = {
     try {
       const expenses = this.getExpenses().map(e => ({
         ...e,
-        concept: e.title || e.concept
+        concept: e.title || e.concept,
+        updatedAt: Number(e.updatedAt) || Date.now()
       }));
       const loans = this.getLoans().map(l => ({
         ...l,
-        entity: l.clientName || l.entity
+        entity: l.clientName || l.entity,
+        updatedAt: Number(l.updatedAt) || Date.now()
       }));
       const deletedExpenses = Array.from(this.getDeletedExpenseIds());
       const deletedLoans = Array.from(this.getDeletedLoanIds());
@@ -606,6 +619,8 @@ const Storage = {
         return;
       }
 
+      let localNeedsPush = false;
+
       // 1. Process Remote Deletions
       const localExpenses = this.getExpenses();
       const localExpMap = new Map(localExpenses.map(e => [e.id, e]));
@@ -635,24 +650,42 @@ const Storage = {
         }
       });
 
-      // 2. Merge cloud expenses non-destructively
+      // 2. Merge cloud expenses based on updatedAt (newer wins, never overwrite newer local data)
       const currentDeletedExp = this.getDeletedExpenseIds();
       cloudExpenses.forEach(ce => {
         const id = ce.id;
         if (!currentDeletedExp.has(id)) {
-          const sanitized = this.sanitizeExpense({
+          const cloudSanitized = this.sanitizeExpense({
             ...ce,
-            title: ce.title || ce.concept
+            title: ce.title || ce.concept,
+            updatedAt: Number(ce.updatedAt) || Number(ce.timestamp) || 0
           });
-          if (sanitized) {
-            const existing = localExpMap.get(id);
-            if (!existing || JSON.stringify(existing) !== JSON.stringify(sanitized)) {
-              localExpMap.set(id, sanitized);
+          if (cloudSanitized) {
+            const localExisting = localExpMap.get(id);
+            if (!localExisting) {
+              localExpMap.set(id, cloudSanitized);
               expensesChanged = true;
+            } else {
+              const localTs = Number(localExisting.updatedAt) || 0;
+              const cloudTs = Number(cloudSanitized.updatedAt) || 0;
+              if (cloudTs > localTs) {
+                localExpMap.set(id, cloudSanitized);
+                expensesChanged = true;
+              } else if (localTs > cloudTs) {
+                localNeedsPush = true;
+              }
             }
           }
         }
       });
+
+      // Check for local expenses missing in cloud
+      localExpMap.forEach((exp, id) => {
+        if (!currentDeletedExp.has(id) && !cloudExpenses.some(ce => ce.id === id)) {
+          localNeedsPush = true;
+        }
+      });
+
       if (expensesChanged) {
         this.saveExpenses(Array.from(localExpMap.values()), false);
         if (typeof ExpensesModule !== 'undefined' && ExpensesModule.render) {
@@ -660,25 +693,43 @@ const Storage = {
         }
       }
 
-      // 3. Merge cloud loans non-destructively
+      // 3. Merge cloud loans based on updatedAt (newer wins, never overwrite newer local data)
       const currentDeletedLoans = this.getDeletedLoanIds();
       cloudLoans.forEach(cl => {
         const id = cl.id;
         if (!currentDeletedLoans.has(id)) {
-          const sanitized = this.sanitizeLoan({
+          const cloudSanitized = this.sanitizeLoan({
             ...cl,
             clientName: cl.clientName || cl.entity,
-            entity: cl.entity || cl.clientName
+            entity: cl.entity || cl.clientName,
+            updatedAt: Number(cl.updatedAt) || 0
           });
-          if (sanitized) {
-            const existing = localLoanMap.get(id);
-            if (!existing || JSON.stringify(existing) !== JSON.stringify(sanitized)) {
-              localLoanMap.set(id, sanitized);
+          if (cloudSanitized) {
+            const localExisting = localLoanMap.get(id);
+            if (!localExisting) {
+              localLoanMap.set(id, cloudSanitized);
               loansChanged = true;
+            } else {
+              const localTs = Number(localExisting.updatedAt) || 0;
+              const cloudTs = Number(cloudSanitized.updatedAt) || 0;
+              if (cloudTs > localTs) {
+                localLoanMap.set(id, cloudSanitized);
+                loansChanged = true;
+              } else if (localTs > cloudTs) {
+                localNeedsPush = true;
+              }
             }
           }
         }
       });
+
+      // Check for local loans missing in cloud
+      localLoanMap.forEach((loan, id) => {
+        if (!currentDeletedLoans.has(id) && !cloudLoans.some(cl => cl.id === id)) {
+          localNeedsPush = true;
+        }
+      });
+
       if (loansChanged) {
         this.saveLoans(Array.from(localLoanMap.values()), false);
         if (typeof LoansModule !== 'undefined' && LoansModule.render) {
@@ -690,6 +741,10 @@ const Storage = {
         if (typeof App !== 'undefined' && App.refreshDashboard) {
           App.refreshDashboard();
         }
+      }
+
+      if (localNeedsPush) {
+        this.pushToCloud();
       }
     } catch (e) {
       // Local vaults keep running smoothly

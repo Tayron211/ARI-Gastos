@@ -55,6 +55,8 @@ public class MainActivity extends Activity {
         settings.setDatabaseEnabled(true);
         settings.setAllowFileAccess(true);
         settings.setAllowContentAccess(true);
+        settings.setAllowFileAccessFromFileURLs(true);
+        settings.setAllowUniversalAccessFromFileURLs(true);
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
         settings.setUseWideViewPort(true);
         settings.setLoadWithOverviewMode(true);
@@ -65,7 +67,7 @@ public class MainActivity extends Activity {
         webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         webView.setWebChromeClient(new WebChromeClient());
 
-        // Puente nativo para Notificaciones Push de cobros y sincronizaciÃ³n de barras del sistema
+        // Puente nativo para Notificaciones Push de cobros y sincronización de barras del sistema
         AndroidBridge bridge = new AndroidBridge(this);
         webView.addJavascriptInterface(bridge, "AndroidApp");
         webView.addJavascriptInterface(bridge, "AndroidBridge");
@@ -112,7 +114,7 @@ public class MainActivity extends Activity {
             }
         });
 
-        // Solicitar permisos de notificaciÃ³n si Android 13+
+        // Solicitar permisos de notificación si Android 13+
         if (Build.VERSION.SDK_INT >= 33) {
             if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
                 requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, REQ_POST_NOTIFICATIONS);

@@ -1,4 +1,4 @@
-# Build Script for Native Android APK - ARI-Control with Push Notifications
+﻿# Build Script for Native Android APK - ARI-Control with Push Notifications
 $ErrorActionPreference = "Stop"
 
 $SDK_DIR = "C:\Android"
@@ -164,6 +164,8 @@ public class MainActivity extends Activity {
         settings.setDatabaseEnabled(true);
         settings.setAllowFileAccess(true);
         settings.setAllowContentAccess(true);
+        settings.setAllowFileAccessFromFileURLs(true);
+        settings.setAllowUniversalAccessFromFileURLs(true);
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
         settings.setUseWideViewPort(true);
         settings.setLoadWithOverviewMode(true);

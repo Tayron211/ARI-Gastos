@@ -1315,7 +1315,8 @@ const LoansModule = {
           guarantee,
           notes,
           currency,
-          history: updatedHistory
+          history: updatedHistory,
+          updatedAt: Date.now()
         };
         Utils.showToast(`Préstamo de "${clientName}" actualizado exitosamente`, 'success');
       }
@@ -1357,13 +1358,14 @@ const LoansModule = {
         guarantee,
         notes,
         currency,
-        history: initialHistory
+        history: initialHistory,
+        updatedAt: Date.now()
       };
       loans.unshift(newLoan);
       Utils.showToast(`Préstamo de "${clientName}" registrado con éxito`, 'success');
     }
 
-    Storage.saveLoans(loans);
+    Storage.saveLoans(loans, true);
     App.closeModal('modal-loan');
     this.render();
     App.refreshDashboard();
@@ -1746,7 +1748,14 @@ const LoansModule = {
                   <span>Interés</span>
                 </button>
               </div>
-            ` : `<span style="color: var(--text-emerald);">${Utils.icon('check', 15)}</span>`}
+            ` : `
+              <div style="display: inline-flex; align-items: center; gap: 6px;">
+                <span style="color: var(--text-emerald); display: inline-flex; align-items: center;" title="Cuota pagada">${Utils.icon('check', 15)}</span>
+                <button class="btn btn-danger-ghost btn-sm" style="padding: 3px 8px; font-size: 0.7rem;" onclick="LoansModule.undoScheduleCuota('${item.id}', ${s.installmentNumber})" title="Revertir Cuota #${s.installmentNumber}">
+                  <span>Revertir</span>
+                </button>
+              </div>
+            `}
           </td>
         </tr>
       `;
@@ -1990,6 +1999,9 @@ const LoansModule = {
               <button class="btn btn-secondary btn-icon btn-sm" onclick="App.closeModal('modal-loan-history'); LoansModule.openReceiptModal('${item.id}', ${idx})" title="Ver Comprobante">
                 ${Utils.icon('receipt', 14)}
               </button>
+              <button class="btn btn-danger-ghost btn-icon btn-sm" onclick="LoansModule.deletePayment('${item.id}', ${idx})" title="Eliminar este cobro">
+                ${Utils.icon('trash', 14)}
+              </button>
             </div>
           </div>
         `;
@@ -2114,6 +2126,79 @@ const LoansModule = {
     }
   },
 
+  deletePayment(loanId, historyIndex) {
+    const loans = Storage.getLoans();
+    const index = loans.findIndex(x => x.id === loanId);
+    if (index === -1) return;
+
+    const loan = loans[index];
+    if (!Array.isArray(loan.history) || !loan.history[historyIndex]) {
+      Utils.showToast('No se encontró el registro de cobro', 'warning');
+      return;
+    }
+
+    const h = loan.history[historyIndex];
+    const desc = `${h.installmentNumber || 'Pago'} (${Utils.formatCurrency(h.amount, loan.currency)})`;
+
+    if (!confirm(`¿Deseas eliminar este registro de cobro: "${desc}"? Se recalculará la deuda restante.`)) return;
+
+    loan.history.splice(historyIndex, 1);
+
+    const cuotaVal = Number(loan.installmentAmount) || (loan.totalAmount / loan.totalInstallments);
+    const amortPaid = loan.history
+      .filter(p => p && p.type !== 'INTEREST_ONLY')
+      .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+    loan.paidInstallments = Math.min(loan.totalInstallments, Math.floor((amortPaid / (cuotaVal || 1)) + 0.001));
+    loan.updatedAt = Date.now();
+
+    Storage.saveLoans(loans, true);
+    Utils.showToast(`Cobro "${desc}" eliminado con éxito`, 'success');
+    this.render();
+    App.refreshDashboard();
+
+    const histModal = document.getElementById('modal-loan-history');
+    if (histModal && histModal.classList.contains('active')) {
+      this.openHistoryModal(loan.id);
+    }
+  },
+
+  undoScheduleCuota(loanId, installmentNumber) {
+    const loans = Storage.getLoans();
+    const index = loans.findIndex(x => x.id === loanId);
+    if (index === -1) return;
+
+    const loan = loans[index];
+    if (!Array.isArray(loan.history)) loan.history = [];
+
+    const targetTag = `Cuota #${installmentNumber}`;
+    const hIdx = loan.history.findIndex(h => h && (h.installmentNumber === targetTag || (h.type !== 'INTEREST_ONLY' && h.installmentNumber && h.installmentNumber.includes(`#${installmentNumber}`))));
+
+    if (!confirm(`¿Deseas anular y revertir el pago de la Cuota #${installmentNumber}?`)) return;
+
+    if (hIdx !== -1) {
+      loan.history.splice(hIdx, 1);
+    } else {
+      loan.paidInstallments = Math.max(0, (loan.paidInstallments || 1) - 1);
+    }
+
+    const cuotaVal = Number(loan.installmentAmount) || (loan.totalAmount / loan.totalInstallments);
+    const amortPaid = loan.history
+      .filter(p => p && p.type !== 'INTEREST_ONLY')
+      .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+    loan.paidInstallments = Math.min(loan.totalInstallments, Math.floor((amortPaid / (cuotaVal || 1)) + 0.001));
+    loan.updatedAt = Date.now();
+
+    Storage.saveLoans(loans, true);
+    Utils.showToast(`Cuota #${installmentNumber} revertida con éxito`, 'info');
+    this.render();
+    App.refreshDashboard();
+
+    const schedModal = document.getElementById('modal-schedule');
+    if (schedModal && schedModal.classList.contains('active')) {
+      this.openScheduleModal(loan.id);
+    }
+  },
+
   undoPayInstallment(loanId) {
     const loans = Storage.getLoans();
     const index = loans.findIndex(x => x.id === loanId);
@@ -2140,9 +2225,10 @@ const LoansModule = {
     const amortPaid = loan.history
       ? loan.history.filter(h => h && h.type !== 'INTEREST_ONLY').reduce((sum, h) => sum + (Number(h.amount) || 0), 0)
       : ((loan.paidInstallments || 0) * cuotaVal);
-    loan.paidInstallments = Math.min(loan.totalInstallments, Math.floor((amortPaid / cuotaVal) + 0.001));
+    loan.paidInstallments = Math.min(loan.totalInstallments, Math.floor((amortPaid / (cuotaVal || 1)) + 0.001));
+    loan.updatedAt = Date.now();
 
-    Storage.saveLoans(loans);
+    Storage.saveLoans(loans, true);
     Utils.showToast('Último cobro revertido con éxito', 'info');
     this.render();
     App.refreshDashboard();
