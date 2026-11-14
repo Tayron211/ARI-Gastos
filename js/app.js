@@ -1088,7 +1088,7 @@ const App = {
     const laterBtn = document.getElementById('btn-later-app-update');
 
     if (titleEl) titleEl.textContent = data.title || 'Nueva Actualización Disponible';
-    if (subEl) subEl.textContent = `Versión ${data.versionName || ''} lista para instalar`;
+    if (subEl) subEl.textContent = data.versionName ? `Versión ${data.versionName}` : '';
 
     if (changelogEl) {
       if (Array.isArray(data.changelog) && data.changelog.length > 0) {

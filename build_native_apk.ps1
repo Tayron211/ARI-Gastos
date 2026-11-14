@@ -1,4 +1,4 @@
-# Build Script for Native Android APK - ARI-Control with Push Notifications
+﻿# Build Script for Native Android APK - ARI-Control with Push Notifications
 $ErrorActionPreference = "Stop"
 
 $SDK_DIR = "C:\Android"
@@ -36,7 +36,7 @@ $manifest = @"
     android:versionName="2.9.1">
 
     <uses-sdk
-        android:minSdkVersion="24"
+        android:minSdkVersion="21"
         android:targetSdkVersion="34" />
 
     <supports-screens
@@ -789,7 +789,7 @@ Write-Host ">>> Enlazando recursos con aapt2 link (minSdk 24, targetSdk 34)..."
     -o "$ANDROID_DIR\build\app_unaligned.apk" `
     -I "$PLATFORM_JAR" `
     --manifest "$ANDROID_DIR\AndroidManifest.xml" `
-    --min-sdk-version 24 `
+    --min-sdk-version 21 `
     --target-sdk-version 34 `
     --version-code 210 `
     --version-name "2.9.1" `
