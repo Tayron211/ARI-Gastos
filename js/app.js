@@ -48,11 +48,18 @@ const App = {
     // Dismiss Splash Screen smoothly after brief delay
     this.dismissSplashScreen();
 
-    // Check for native app updates in background (EXCLUSIVO para APK nativo)
+    // Exclusividad Estricta: El actualizador solo opera en el APK nativo (nunca en PC o navegadores)
     if (window.AndroidApp || window.AndroidBridge) {
+      document.documentElement.classList.add('is-native-apk');
+      document.body.classList.add('is-native-apk');
       setTimeout(() => {
         this.checkAppUpdate();
       }, 1200);
+    } else {
+      document.documentElement.classList.remove('is-native-apk');
+      document.body.classList.remove('is-native-apk');
+      const updateModal = document.getElementById('modal-app-update');
+      if (updateModal) updateModal.remove();
     }
   },
 
@@ -1076,8 +1083,9 @@ const App = {
   },
 
   showUpdateModal(data) {
-    // Salvaguarda: El popup de actualización es exclusivo del APK nativo
+    // Salvaguarda absoluta: El popup de actualización es 100% exclusivo del APK nativo
     if (!window.AndroidApp && !window.AndroidBridge) return;
+    if (!document.documentElement.classList.contains('is-native-apk')) return;
     const modal = document.getElementById('modal-app-update');
     if (!modal) return;
 

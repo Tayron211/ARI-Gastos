@@ -2220,3 +2220,16 @@ body.splash-active {
     transform: scale(1.2);
   }
 }
+
+/* ==========================================================================
+   EXCLUSIVE APK NATIVE UPDATE MODAL (NEVER VISIBLE IN BROWSERS OR PC)
+   ========================================================================== */
+#modal-app-update {
+  display: none !important;
+}
+
+html.is-native-apk #modal-app-update.open,
+body.is-native-apk #modal-app-update.open {
+  display: flex !important;
+}
+

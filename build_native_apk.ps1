@@ -363,6 +363,7 @@ public class MainActivity extends Activity {
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
+                view.evaluateJavascript("document.documentElement.classList.add('is-native-apk'); if (document.body) { document.body.classList.add('is-native-apk'); }", null);
                 view.evaluateJavascript(
                     "(function() { return document.documentElement.getAttribute('data-theme') || localStorage.getItem('finanflow_theme') || 'light'; })();",
                     new android.webkit.ValueCallback<String>() {
