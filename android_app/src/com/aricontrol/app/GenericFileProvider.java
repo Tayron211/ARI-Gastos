@@ -77,24 +77,19 @@ public class GenericFileProvider extends ContentProvider {
 
     private File getFileForUri(Uri uri) {
         if (uri == null) return null;
-        String path = uri.getPath();
-        if (path == null) return null;
-        if (path.startsWith("/")) {
-            path = path.substring(1);
-        }
+        String name = uri.getLastPathSegment();
+        if (name == null) return null;
         File baseDir = getContext().getExternalFilesDir(null);
         if (baseDir == null) {
             baseDir = getContext().getFilesDir();
         }
-        return new File(baseDir, path);
+        File updatesDir = new File(baseDir, "updates");
+        File file = new File(updatesDir, name);
+        if (file.exists()) return file;
+        return new File(baseDir, name);
     }
 
     public static Uri getUriForFile(android.content.Context context, File file) {
-        File baseDir = context.getExternalFilesDir(null);
-        if (baseDir == null) {
-            baseDir = context.getFilesDir();
-        }
-        String relativePath = baseDir.toURI().relativize(file.toURI()).getPath();
-        return Uri.parse("content://" + AUTHORITY + "/" + relativePath);
+        return Uri.parse("content://" + AUTHORITY + "/" + file.getName());
     }
 }

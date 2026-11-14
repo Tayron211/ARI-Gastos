@@ -101,14 +101,25 @@ public class MainActivity extends Activity {
         webView.setWebChromeClient(new WebChromeClient());
 
         // Puente nativo para Notificaciones Push de cobros y sincronización de barras del sistema
-        AndroidBridge bridge = new AndroidBridge(this);
+        final AndroidBridge bridge = new AndroidBridge(this);
         webView.addJavascriptInterface(bridge, "AndroidApp");
         webView.addJavascriptInterface(bridge, "AndroidBridge");
+
+        webView.setDownloadListener(new android.webkit.DownloadListener() {
+            @Override
+            public void onDownloadStart(String url, String userAgent, String contentDisposition, String mimetype, long contentLength) {
+                bridge.downloadAndInstallUpdate(url, "2.9.0");
+            }
+        });
 
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 String url = request.getUrl().toString();
+                if (url.endsWith(".apk") || url.contains(".apk?")) {
+                    bridge.downloadAndInstallUpdate(url, "2.9.0");
+                    return true;
+                }
                 if (url.startsWith("https://ari-gastos.pages.dev") || 
                     url.startsWith("file:///android_asset/")) {
                     return false;
@@ -255,6 +266,20 @@ public class MainActivity extends Activity {
         });
     }
 
+    private java.io.File pendingInstallApkFile = null;
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (pendingInstallApkFile != null && pendingInstallApkFile.exists()) {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || getPackageManager().canRequestPackageInstalls()) {
+                java.io.File fileToInstall = pendingInstallApkFile;
+                pendingInstallApkFile = null;
+                promptInstallApk(fileToInstall);
+            }
+        }
+    }
+
     public void promptInstallApk(final java.io.File apkFile) {
         runOnUiThread(new Runnable() {
             @Override
@@ -262,6 +287,7 @@ public class MainActivity extends Activity {
                 try {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         if (!getPackageManager().canRequestPackageInstalls()) {
+                            pendingInstallApkFile = apkFile;
                             Intent settingsIntent = new Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES);
                             settingsIntent.setData(Uri.parse("package:" + getPackageName()));
                             startActivity(settingsIntent);
@@ -276,6 +302,12 @@ public class MainActivity extends Activity {
                     Uri apkUri = GenericFileProvider.getUriForFile(MainActivity.this, apkFile);
                     intent.setDataAndType(apkUri, "application/vnd.android.package-archive");
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+                    java.util.List<android.content.pm.ResolveInfo> resInfoList = getPackageManager().queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
+                    for (android.content.pm.ResolveInfo resolveInfo : resInfoList) {
+                        grantUriPermission(resolveInfo.activityInfo.packageName, apkUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    }
+
                     startActivity(intent);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -297,7 +329,7 @@ public class MainActivity extends Activity {
             try {
                 return activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0).versionCode;
             } catch (Exception e) {
-                return 208;
+                return 209;
             }
         }
 
@@ -306,7 +338,7 @@ public class MainActivity extends Activity {
             try {
                 return activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0).versionName;
             } catch (Exception e) {
-                return "2.8.0";
+                return "2.9.0";
             }
         }
 
@@ -336,6 +368,9 @@ public class MainActivity extends Activity {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
+                    java.net.HttpURLConnection conn = null;
+                    java.io.InputStream input = null;
+                    java.io.OutputStream output = null;
                     try {
                         activity.notifyDownloadProgress(5, "Iniciando descarga segura...");
                         java.io.File updatesDir = new java.io.File(activity.getExternalFilesDir(null), "updates");
@@ -343,15 +378,34 @@ public class MainActivity extends Activity {
                         java.io.File apkFile = new java.io.File(updatesDir, "ARI-Control-v" + versionName + ".apk");
                         if (apkFile.exists()) apkFile.delete();
 
-                        java.net.URL url = new java.net.URL(downloadUrl);
-                        java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
-                        conn.setConnectTimeout(15000);
+                        String currentUrl = downloadUrl;
+                        java.net.URL url = new java.net.URL(currentUrl);
+                        conn = (java.net.HttpURLConnection) url.openConnection();
+                        conn.setInstanceFollowRedirects(true);
+                        conn.setConnectTimeout(20000);
                         conn.setReadTimeout(30000);
+                        conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Android; Mobile)");
                         conn.connect();
 
+                        int responseCode = conn.getResponseCode();
+                        if (responseCode == java.net.HttpURLConnection.HTTP_MOVED_PERM || 
+                            responseCode == java.net.HttpURLConnection.HTTP_MOVED_TEMP || 
+                            responseCode == 307 || responseCode == 308) {
+                            String redirectUrl = conn.getHeaderField("Location");
+                            if (redirectUrl != null) {
+                                conn.disconnect();
+                                url = new java.net.URL(redirectUrl);
+                                conn = (java.net.HttpURLConnection) url.openConnection();
+                                conn.setConnectTimeout(20000);
+                                conn.setReadTimeout(30000);
+                                conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Android; Mobile)");
+                                conn.connect();
+                            }
+                        }
+
                         int fileLength = conn.getContentLength();
-                        java.io.InputStream input = new java.io.BufferedInputStream(conn.getInputStream());
-                        java.io.OutputStream output = new java.io.FileOutputStream(apkFile);
+                        input = new java.io.BufferedInputStream(conn.getInputStream());
+                        output = new java.io.FileOutputStream(apkFile);
 
                         byte[] data = new byte[8192];
                         long total = 0;
@@ -365,19 +419,27 @@ public class MainActivity extends Activity {
                                 int progress = (int) (total * 100 / fileLength);
                                 if (progress >= lastProgress + 5 || progress == 100) {
                                     lastProgress = progress;
-                                    activity.notifyDownloadProgress(progress, "Descargando actualización: " + progress + "%");
+                                    activity.notifyDownloadProgress(progress, "Descargando: " + progress + "% (" + Math.round(total / 1024.0 / 1024.0 * 10.0)/10.0 + " MB)");
                                 }
+                            } else {
+                                activity.notifyDownloadProgress(50, "Descargando: " + Math.round(total / 1024.0 / 1024.0 * 10.0)/10.0 + " MB");
                             }
                         }
 
                         output.flush();
                         output.close();
+                        output = null;
                         input.close();
+                        input = null;
 
                         activity.notifyDownloadProgress(100, "Descarga completada. Abriendo instalador...");
                         activity.promptInstallApk(apkFile);
                     } catch (final Exception e) {
                         activity.notifyDownloadError(e.getMessage());
+                    } finally {
+                        try { if (output != null) output.close(); } catch (Exception ignored) {}
+                        try { if (input != null) input.close(); } catch (Exception ignored) {}
+                        if (conn != null) conn.disconnect();
                     }
                 }
             }).start();

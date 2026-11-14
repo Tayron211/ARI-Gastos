@@ -1116,11 +1116,12 @@ const App = {
     const progressBox = document.getElementById('update-download-progress-box');
     const updateBtn = document.getElementById('btn-perform-app-update');
     const updateBtnText = document.getElementById('btn-perform-app-update-text');
+    const apkUrl = data.apkUrl || 'https://ari-gastos.pages.dev/ARI-Control.apk';
 
     if (bridge && typeof bridge.downloadAndInstallUpdate === 'function') {
       if (progressBox) progressBox.style.display = 'block';
       if (updateBtn) updateBtn.disabled = true;
-      if (updateBtnText) updateBtnText.textContent = 'Descargando actualización...';
+      if (updateBtnText) updateBtnText.textContent = 'Iniciando descarga segura...';
 
       window.onUpdateDownloadProgress = (percent, message) => {
         const bar = document.getElementById('update-progress-bar');
@@ -1131,7 +1132,7 @@ const App = {
         if (lbl && message) lbl.textContent = message;
         if (updateBtnText) updateBtnText.textContent = `Descargando: ${percent}%`;
         if (percent >= 100) {
-          if (updateBtnText) updateBtnText.textContent = 'Abriendo instalador...';
+          if (updateBtnText) updateBtnText.textContent = 'Abriendo instalador Android...';
         }
       };
 
@@ -1139,32 +1140,52 @@ const App = {
         if (progressBox) progressBox.style.display = 'none';
         if (updateBtn) updateBtn.disabled = false;
         if (updateBtnText) updateBtnText.textContent = 'Reintentar Actualización';
-        Utils.showToast(`Error al descargar: ${errorMsg || 'Revisa tu conexión'}`, 'error');
+        Utils.showToast(`Error al descargar: ${errorMsg || 'Revisa tu conexión'}. Abriendo descarga directa...`, 'error');
+        window.location.href = apkUrl;
       };
 
       window.onUpdatePermissionNeeded = () => {
         if (updateBtn) updateBtn.disabled = false;
-        if (updateBtnText) updateBtnText.textContent = 'Habilitar Permiso e Instalar';
-        Utils.showToast('Permite instalar aplicaciones desde esta fuente en Ajustes', 'info');
+        if (updateBtnText) updateBtnText.textContent = 'Permitir e Instalar';
+        Utils.showToast('Activa "Permitir desde esta fuente" en Ajustes y regresa para instalar', 'info');
       };
 
       try {
-        bridge.downloadAndInstallUpdate(data.apkUrl || 'https://ari-gastos.pages.dev/ARI-Control.apk', data.versionName || 'update');
+        bridge.downloadAndInstallUpdate(apkUrl, data.versionName || '2.9.0');
       } catch (err) {
         console.error('Error invoking native updater:', err);
-        window.location.href = data.apkUrl || './ARI-Control.apk';
+        window.location.href = apkUrl;
       }
     } else {
-      Utils.showToast('Descargando la última versión del APK...', 'info');
-      const link = document.createElement('a');
-      link.href = data.apkUrl || './ARI-Control.apk';
-      link.download = 'ARI-Control.apk';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      setTimeout(() => {
-        App.closeModal('modal-app-update');
-      }, 1000);
+      // In mobile browser, PWA or older APK: DO NOT just fake a toast and close!
+      // Trigger genuine direct navigation to the APK so Android downloads the file for real
+      Utils.showToast('Iniciando descarga de la nueva versión...', 'info');
+      if (updateBtnText) updateBtnText.textContent = 'Descargando archivo APK...';
+      if (progressBox) progressBox.style.display = 'none';
+
+      // Real direct download navigation
+      window.location.href = apkUrl;
+
+      // Keep modal open and show clear, prominent step-by-step instructions
+      const modalBody = document.querySelector('#modal-app-update .modal-body');
+      if (modalBody) {
+        let guideEl = document.getElementById('update-manual-guide');
+        if (!guideEl) {
+          guideEl = document.createElement('div');
+          guideEl.id = 'update-manual-guide';
+          guideEl.style.cssText = 'margin-top: 14px; padding: 12px; background: rgba(45, 212, 191, 0.12); border: 1px solid rgba(45, 212, 191, 0.35); border-radius: var(--radius-sm); font-size: 0.8rem; line-height: 1.5; color: var(--text-primary);';
+          modalBody.appendChild(guideEl);
+        }
+        guideEl.innerHTML = `
+          <div style="font-weight: 700; color: var(--accent-aqua); margin-bottom: 6px;">📥 Pasos para instalar la actualización:</div>
+          <ol style="margin: 0; padding-left: 18px;">
+            <li>Si tu navegador te pregunta si deseas descargar <strong>ARI-Control.apk</strong>, pulsa <strong>"Descargar de todos modos"</strong>.</li>
+            <li>Al finalizar, toca la notificación de descarga o abre tu carpeta <strong>Descargas</strong>.</li>
+            <li>Toca <strong>ARI-Control.apk</strong> y pulsa <strong>Instalar / Actualizar</strong>.</li>
+          </ol>
+          <div style="margin-top: 8px; font-weight: 600; color: #10b981;">✓ Todos tus gastos, préstamos y clientes permanecen 100% seguros y guardados.</div>
+        `;
+      }
     }
   },
 
