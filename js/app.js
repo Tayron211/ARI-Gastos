@@ -979,8 +979,8 @@ const App = {
                 ${Utils.icon('percent', 13)}
                 <span>Solo Interés</span>
               </button>
-              <button class="btn btn-secondary btn-sm" onclick="LoansModule.openReceiptModalForLoan('${l.id}')" title="Comprobante">
-                ${Utils.icon('file', 13)}
+              <button class="btn btn-secondary btn-icon btn-sm" onclick="LoansModule.openReceiptModal('${l.id}')" title="Ver Comprobante de Pago">
+                ${Utils.icon('receipt', 14)}
               </button>
             </div>
           </div>

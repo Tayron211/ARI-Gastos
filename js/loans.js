@@ -1767,6 +1767,10 @@ const LoansModule = {
   /**
    * Modal de Recibo / Voucher Digital (Distingue Cuota vs Solo Interés)
    */
+  openReceiptModalForLoan(loanId) {
+    this.openReceiptModal(loanId);
+  },
+
   openReceiptModal(loanId, historyIndex = null) {
     const item = this.getLoansWithMetrics().find(x => x.id === loanId);
     if (!item) return;
