@@ -32,8 +32,8 @@ $manifest = @"
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.aricontrol.app"
-    android:versionCode="209"
-    android:versionName="2.9.0">
+    android:versionCode="210"
+    android:versionName="2.9.1">
 
     <uses-sdk
         android:minSdkVersion="24"
@@ -333,7 +333,7 @@ public class MainActivity extends Activity {
         webView.setDownloadListener(new android.webkit.DownloadListener() {
             @Override
             public void onDownloadStart(String url, String userAgent, String contentDisposition, String mimetype, long contentLength) {
-                bridge.downloadAndInstallUpdate(url, "2.9.0");
+                bridge.downloadAndInstallUpdate(url, "2.9.1");
             }
         });
 
@@ -342,7 +342,7 @@ public class MainActivity extends Activity {
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 String url = request.getUrl().toString();
                 if (url.endsWith(".apk") || url.contains(".apk?")) {
-                    bridge.downloadAndInstallUpdate(url, "2.9.0");
+                    bridge.downloadAndInstallUpdate(url, "2.9.1");
                     return true;
                 }
                 if (url.startsWith("https://ari-gastos.pages.dev") || 
@@ -556,7 +556,7 @@ public class MainActivity extends Activity {
             try {
                 return activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0).versionCode;
             } catch (Exception e) {
-                return 209;
+                return 210;
             }
         }
 
@@ -565,7 +565,7 @@ public class MainActivity extends Activity {
             try {
                 return activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0).versionName;
             } catch (Exception e) {
-                return "2.9.0";
+                return "2.9.1";
             }
         }
 
@@ -791,8 +791,8 @@ Write-Host ">>> Enlazando recursos con aapt2 link (minSdk 24, targetSdk 34)..."
     --manifest "$ANDROID_DIR\AndroidManifest.xml" `
     --min-sdk-version 24 `
     --target-sdk-version 34 `
-    --version-code 209 `
-    --version-name "2.9.0" `
+    --version-code 210 `
+    --version-name "2.9.1" `
     --java "$ANDROID_DIR\build\gen" `
     --auto-add-overlay `
     "$ANDROID_DIR\build\compiled_res\res.zip"

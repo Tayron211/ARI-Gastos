@@ -347,8 +347,21 @@ const ExpensesModule = {
     App.refreshDashboard();
   },
 
-  deleteExpense(id) {
-    if (!confirm('¿Estás seguro de que deseas eliminar este gasto?')) return;
+  async deleteExpense(id) {
+    const expense = Storage.getExpenses().find(x => x.id === id);
+    const desc = expense ? `${expense.description} (${Utils.formatCurrency(expense.amount, expense.currency)})` : 'este gasto';
+
+    const confirmed = await Utils.confirmModal({
+      title: 'Eliminar Gasto',
+      message: '¿Estás seguro de que deseas eliminar este gasto?',
+      detail: `<strong>${this.escapeHTML(desc)}</strong>`,
+      confirmText: 'Eliminar Gasto',
+      cancelText: 'Cancelar',
+      type: 'danger',
+      icon: 'trash'
+    });
+
+    if (!confirmed) return;
     Storage.deleteExpense(id);
     Utils.showToast('Gasto eliminado exitosamente', 'info');
     this.render();

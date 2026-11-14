@@ -2049,9 +2049,17 @@ const LoansModule = {
       return;
     }
 
-    if (!confirm(`¿Confirmas la LIQUIDACIÓN TOTAL del préstamo de "${loan.clientName || loan.entity}"?\n\nSe liquidará el saldo pendiente de ${Utils.formatCurrency(remainingMoney, loan.currency)} y quedará con deuda 0.`)) {
-      return;
-    }
+    const confirmed = await Utils.confirmModal({
+      title: 'Liquidación Total',
+      message: `¿Confirmas la liquidación total del préstamo de <strong>${loan.clientName || loan.entity}</strong>?`,
+      detail: `Se liquidará el saldo pendiente de <strong>${Utils.formatCurrency(remainingMoney, loan.currency)}</strong> y el préstamo quedará con deuda cancelada (S/ 0.00).`,
+      confirmText: 'Liquidar Préstamo',
+      cancelText: 'Cancelar',
+      type: 'primary',
+      icon: 'check'
+    });
+
+    if (!confirmed) return;
 
     loan.paidInstallments = Number(loan.totalInstallments);
     loan.history = loan.history || [];
@@ -2144,7 +2152,22 @@ const LoansModule = {
     const h = loan.history[historyIndex];
     const desc = `${h.installmentNumber || 'Pago'} (${Utils.formatCurrency(h.amount, loan.currency)})`;
 
-    if (!confirm(`¿Deseas eliminar este registro de cobro: "${desc}"? Se recalculará la deuda restante.`)) return;
+    const confirmed = await Utils.confirmModal({
+      title: 'Eliminar Registro de Cobro',
+      message: `¿Deseas eliminar este registro de cobro?`,
+      detail: `
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <div><strong>${desc}</strong></div>
+          <div style="color: var(--text-rose); font-size: 0.8rem;">Se recalculará automáticamente la deuda pendiente.</div>
+        </div>
+      `,
+      confirmText: 'Eliminar Cobro',
+      cancelText: 'Cancelar',
+      type: 'danger',
+      icon: 'trash'
+    });
+
+    if (!confirmed) return;
 
     loan.history.splice(historyIndex, 1);
 
@@ -2166,7 +2189,7 @@ const LoansModule = {
     }
   },
 
-  undoScheduleCuota(loanId, installmentNumber) {
+  async undoScheduleCuota(loanId, installmentNumber) {
     const loans = Storage.getLoans();
     const index = loans.findIndex(x => x.id === loanId);
     if (index === -1) return;
@@ -2177,7 +2200,17 @@ const LoansModule = {
     const targetTag = `Cuota #${installmentNumber}`;
     const hIdx = loan.history.findIndex(h => h && (h.installmentNumber === targetTag || (h.type !== 'INTEREST_ONLY' && h.installmentNumber && h.installmentNumber.includes(`#${installmentNumber}`))));
 
-    if (!confirm(`¿Deseas anular y revertir el pago de la Cuota #${installmentNumber}?`)) return;
+    const confirmed = await Utils.confirmModal({
+      title: 'Anular Cuota',
+      message: `¿Deseas anular y revertir el pago de la <strong>Cuota #${installmentNumber}</strong>?`,
+      detail: 'La cuota volverá al estado pendiente y se ajustará el saldo adeudado.',
+      confirmText: 'Anular Cuota',
+      cancelText: 'Cancelar',
+      type: 'warning',
+      icon: 'repeat'
+    });
+
+    if (!confirmed) return;
 
     if (hIdx !== -1) {
       loan.history.splice(hIdx, 1);
@@ -2203,7 +2236,7 @@ const LoansModule = {
     }
   },
 
-  undoPayInstallment(loanId) {
+  async undoPayInstallment(loanId) {
     const loans = Storage.getLoans();
     const index = loans.findIndex(x => x.id === loanId);
     if (index === -1) return;
@@ -2216,8 +2249,30 @@ const LoansModule = {
 
     const lastPayment = loan.history && loan.history.length > 0 ? loan.history[loan.history.length - 1] : null;
     const desc = lastPayment ? `${lastPayment.installmentNumber} (${Utils.formatCurrency(lastPayment.amount, loan.currency)})` : `Cuota #${loan.paidInstallments}`;
+    const clientName = loan.clientName || loan.entity || 'Cliente';
 
-    if (!confirm(`¿Deseas revertir el último cobro registrado: ${desc}?`)) return;
+    const confirmed = await Utils.confirmModal({
+      title: 'Revertir Último Cobro',
+      message: `¿Deseas revertir el último cobro registrado para <strong>${clientName}</strong>?`,
+      detail: `
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="color: var(--text-muted);">Cobro a revertir:</span>
+            <strong style="color: var(--text-primary); font-family: var(--font-heading);">${desc}</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed var(--border-color); padding-top: 6px;">
+            <span style="color: var(--text-muted);">Efecto:</span>
+            <span style="color: var(--text-amber); font-weight: 600;">Se restaurará la deuda al estado previo</span>
+          </div>
+        </div>
+      `,
+      confirmText: 'Sí, Revertir Cobro',
+      cancelText: 'Cancelar',
+      type: 'warning',
+      icon: 'repeat'
+    });
+
+    if (!confirmed) return;
 
     if (loan.history && loan.history.length > 0) {
       loan.history.pop();
@@ -2238,8 +2293,22 @@ const LoansModule = {
     App.refreshDashboard();
   },
 
-  deleteLoan(id) {
-    if (!confirm('¿Estás seguro de que deseas eliminar este préstamo?')) return;
+  async deleteLoan(id) {
+    const loans = Storage.getLoans();
+    const loan = loans.find(x => x.id === id);
+    const clientName = loan ? (loan.clientName || loan.entity || 'este préstamo') : 'este préstamo';
+
+    const confirmed = await Utils.confirmModal({
+      title: 'Eliminar Préstamo',
+      message: `¿Estás seguro de que deseas eliminar el préstamo de <strong>${clientName}</strong>?`,
+      detail: '<span style="color: var(--text-rose);">Esta acción eliminará el registro de la cartera activa.</span>',
+      confirmText: 'Eliminar Préstamo',
+      cancelText: 'Cancelar',
+      type: 'danger',
+      icon: 'trash'
+    });
+
+    if (!confirmed) return;
     Storage.deleteLoan(id);
     Utils.showToast('Préstamo eliminado exitosamente', 'info');
     this.render();

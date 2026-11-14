@@ -110,6 +110,109 @@ const Utils = {
   },
 
   /**
+   * Diálogo modal de confirmación integrado con el diseño estético de ARI-Control
+   * @param {Object} opts
+   * @param {string} opts.title - Título del diálogo
+   * @param {string} opts.message - Mensaje principal o pregunta
+   * @param {string} [opts.detail] - Detalle contextual o badge descriptivo
+   * @param {string} [opts.confirmText] - Texto del botón de confirmación (default 'Confirmar')
+   * @param {string} [opts.cancelText] - Texto del botón de cancelación (default 'Cancelar')
+   * @param {'primary'|'danger'|'warning'|'info'} [opts.type] - Tipo visual del diálogo (default 'warning')
+   * @param {string} [opts.icon] - Icono SVG o nombre de icono
+   * @returns {Promise<boolean>}
+   */
+  confirmModal({
+    title = 'Confirmación',
+    message = '¿Deseas continuar con esta acción?',
+    detail = '',
+    confirmText = 'Confirmar',
+    cancelText = 'Cancelar',
+    type = 'warning',
+    icon = 'alert'
+  } = {}) {
+    return new Promise(resolve => {
+      const existing = document.getElementById('ari-custom-confirm-modal');
+      if (existing) existing.remove();
+
+      let headerBadgeColor = 'rgba(245, 158, 11, 0.15)';
+      let headerTextColor = 'var(--text-amber, #f59e0b)';
+      let btnClass = 'btn-primary';
+
+      if (type === 'danger') {
+        headerBadgeColor = 'rgba(244, 63, 94, 0.15)';
+        headerTextColor = 'var(--text-rose, #f43f5e)';
+        btnClass = 'btn-danger';
+      } else if (type === 'info') {
+        headerBadgeColor = 'rgba(99, 102, 241, 0.15)';
+        headerTextColor = 'var(--text-indigo, #6366f1)';
+        btnClass = 'btn-primary';
+      }
+
+      const backdrop = document.createElement('div');
+      backdrop.id = 'ari-custom-confirm-modal';
+      backdrop.className = 'modal-backdrop open';
+      backdrop.style.zIndex = '99999';
+
+      const iconSvg = typeof icon === 'string' && this.icon(icon) ? this.icon(icon, 18) : this.icon('alert', 18);
+
+      backdrop.innerHTML = `
+        <div class="modal-dialog" style="max-width: 440px; box-shadow: var(--shadow-xl); border: 1px solid var(--border-color); border-radius: var(--radius-lg); overflow: hidden; animation: subviewFadeIn 0.22s ease-out;">
+          <div class="modal-sheet-grabber"></div>
+          <div class="modal-header" style="padding: 14px 18px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 10px; background: ${headerBadgeColor}; color: ${headerTextColor}; flex-shrink: 0;">
+                ${iconSvg}
+              </span>
+              <h3 style="margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--text-primary); font-family: var(--font-heading);">${title}</h3>
+            </div>
+            <button type="button" class="modal-close-btn" id="confirm-modal-close" title="Cerrar">
+              ${this.icon('x', 15)}
+            </button>
+          </div>
+          <div class="modal-body" style="padding: 18px;">
+            <div style="margin: 0 0 12px; font-size: 0.95rem; color: var(--text-primary); line-height: 1.5; font-weight: 500;">
+              ${message}
+            </div>
+            ${detail ? `
+              <div style="background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px 14px; font-size: 0.88rem; color: var(--text-secondary); line-height: 1.45;">
+                ${detail}
+              </div>
+            ` : ''}
+          </div>
+          <div class="modal-footer" style="padding: 12px 18px; border-top: 1px solid var(--border-color); display: flex; align-items: center; justify-content: flex-end; gap: 10px; background: var(--bg-tertiary);">
+            <button type="button" class="btn btn-secondary btn-sm" id="confirm-modal-cancel" style="padding: 8px 16px;">
+              ${cancelText}
+            </button>
+            <button type="button" class="btn ${btnClass} btn-sm" id="confirm-modal-ok" style="padding: 8px 18px; font-weight: 600;">
+              ${confirmText}
+            </button>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(backdrop);
+
+      const cleanup = (val) => {
+        backdrop.classList.remove('open');
+        backdrop.style.opacity = '0';
+        backdrop.style.transition = 'opacity 0.15s ease';
+        setTimeout(() => {
+          backdrop.remove();
+        }, 160);
+        resolve(val);
+      };
+
+      document.getElementById('confirm-modal-cancel').onclick = () => cleanup(false);
+      document.getElementById('confirm-modal-close').onclick = () => cleanup(false);
+      document.getElementById('confirm-modal-ok').onclick = () => cleanup(true);
+
+      backdrop.onclick = (e) => {
+        if (e.target === backdrop) cleanup(false);
+      };
+    });
+  },
+
+  /**
    * Bespoke SVG Icon System (Clean stroke + duotone accent)
    */
   icon(name, size = 16) {

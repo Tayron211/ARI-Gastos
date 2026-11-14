@@ -108,7 +108,7 @@ public class MainActivity extends Activity {
         webView.setDownloadListener(new android.webkit.DownloadListener() {
             @Override
             public void onDownloadStart(String url, String userAgent, String contentDisposition, String mimetype, long contentLength) {
-                bridge.downloadAndInstallUpdate(url, "2.9.0");
+                bridge.downloadAndInstallUpdate(url, "2.9.1");
             }
         });
 
@@ -117,7 +117,7 @@ public class MainActivity extends Activity {
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 String url = request.getUrl().toString();
                 if (url.endsWith(".apk") || url.contains(".apk?")) {
-                    bridge.downloadAndInstallUpdate(url, "2.9.0");
+                    bridge.downloadAndInstallUpdate(url, "2.9.1");
                     return true;
                 }
                 if (url.startsWith("https://ari-gastos.pages.dev") || 
@@ -331,7 +331,7 @@ public class MainActivity extends Activity {
             try {
                 return activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0).versionCode;
             } catch (Exception e) {
-                return 209;
+                return 210;
             }
         }
 
@@ -340,7 +340,7 @@ public class MainActivity extends Activity {
             try {
                 return activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0).versionName;
             } catch (Exception e) {
-                return "2.9.0";
+                return "2.9.1";
             }
         }
 
