@@ -48,10 +48,12 @@ const App = {
     // Dismiss Splash Screen smoothly after brief delay
     this.dismissSplashScreen();
 
-    // Check for native app or PWA updates in background
-    setTimeout(() => {
-      this.checkAppUpdate();
-    }, 1200);
+    // Check for native app updates in background (EXCLUSIVO para APK nativo)
+    if (window.AndroidApp || window.AndroidBridge) {
+      setTimeout(() => {
+        this.checkAppUpdate();
+      }, 1200);
+    }
   },
 
   dismissSplashScreen() {
@@ -1034,17 +1036,22 @@ const App = {
   currentUpdateInfo: null,
 
   async checkAppUpdate() {
+    // EL POPUP DE ACTUALIZACIÓN SOLO DEBE SALIR EN LA APP NATIVA (APK), NUNCA EN EL NAVEGADOR WEB
+    const bridge = window.AndroidApp || window.AndroidBridge;
+    if (!bridge) {
+      return; // Navegador web: no mostrar popup bajo ninguna circunstancia
+    }
+
     try {
       const res = await fetch(`version.json?t=${Date.now()}`);
       if (!res.ok) return;
       const data = await res.json();
       if (!data || !data.versionCode) return;
 
-      const bridge = window.AndroidApp || window.AndroidBridge;
-      let currentCode = 207; // Default or web version code
+      let currentCode = 207;
       let currentName = '2.7.0';
 
-      if (bridge && typeof bridge.getAppVersionCode === 'function') {
+      if (typeof bridge.getAppVersionCode === 'function') {
         try {
           currentCode = bridge.getAppVersionCode();
           if (typeof bridge.getAppVersionName === 'function') {
@@ -1053,8 +1060,6 @@ const App = {
         } catch (e) {
           console.warn('Error reading native app version code:', e);
         }
-      } else {
-        currentCode = parseInt(localStorage.getItem('ari_installed_version_code') || '207', 10);
       }
 
       if (data.versionCode > currentCode) {
@@ -1071,6 +1076,8 @@ const App = {
   },
 
   showUpdateModal(data) {
+    // Salvaguarda: El popup de actualización es exclusivo del APK nativo
+    if (!window.AndroidApp && !window.AndroidBridge) return;
     const modal = document.getElementById('modal-app-update');
     if (!modal) return;
 
