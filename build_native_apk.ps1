@@ -1,4 +1,4 @@
-# Build Script for Native Android APK - ARI-Control with Push Notifications
+﻿# Build Script for Native Android APK - ARI-Control with Push Notifications
 $ErrorActionPreference = "Stop"
 
 $SDK_DIR = "C:\Android"
@@ -32,8 +32,8 @@ $manifest = @"
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.aricontrol.app"
-    android:versionCode="206"
-    android:versionName="2.6.0">
+    android:versionCode="207"
+    android:versionName="2.7.0">
 
     <uses-sdk
         android:minSdkVersion="24"
@@ -116,6 +116,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.net.Uri;
@@ -141,21 +142,49 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        SharedPreferences prefs = getSharedPreferences("ari_app_prefs", Context.MODE_PRIVATE);
+        String savedColor = prefs.getString("status_bar_color", null);
+        boolean isLight;
+        String colorHex;
+
+        if (savedColor != null) {
+            colorHex = savedColor;
+            isLight = prefs.getBoolean("is_light_bar", false);
+        } else {
+            colorHex = "#0b0e14";
+            isLight = false;
+        }
+
+        int initColor = Color.parseColor(colorHex);
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             Window window = getWindow();
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-            window.setStatusBarColor(Color.WHITE);
-            window.setNavigationBarColor(Color.WHITE);
+            window.setStatusBarColor(initColor);
+            window.setNavigationBarColor(initColor);
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             View decor = getWindow().getDecorView();
-            decor.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+            int flags = decor.getSystemUiVisibility();
+            if (isLight) {
+                flags |= View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+            } else {
+                flags &= ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                if (isLight) {
+                    flags |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+                } else {
+                    flags &= ~View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+                }
+            }
+            decor.setSystemUiVisibility(flags);
         }
 
         createNotificationChannel();
 
         webView = new WebView(this);
-        webView.setBackgroundColor(Color.WHITE);
+        webView.setBackgroundColor(initColor);
         setContentView(webView);
 
         WebSettings settings = webView.getSettings();
@@ -269,7 +298,16 @@ public class MainActivity extends Activity {
             @Override
             public void run() {
                 try {
+                    SharedPreferences prefs = getSharedPreferences("ari_app_prefs", Context.MODE_PRIVATE);
+                    prefs.edit()
+                         .putString("status_bar_color", colorHex)
+                         .putBoolean("is_light_bar", isLight)
+                         .apply();
+
                     int color = Color.parseColor(colorHex);
+                    if (webView != null) {
+                        webView.setBackgroundColor(color);
+                    }
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                         Window window = getWindow();
                         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
